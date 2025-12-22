@@ -114,15 +114,15 @@ export default function Auth() {
                 <div className="flex w-full max-w-[1200px] mx-auto h-full relative z-10">
                     {/* Left Side - Illustration */}
                     <div className="w-1/2 flex flex-col justify-center items-center p-12">
-                        <h1 className="text-5xl font-bold text-white mb-12">Bento Flow</h1>
+                        <h1 className="text-7xl font-bold font-['Playfair_Display'] text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-100 to-white/80 mb-4 drop-shadow-lg">Bento Flow</h1>
                         <WelcomeAnimation />
                     </div>
 
                     {/* Right Side - Login Form */}
                     <div className="w-1/2 flex flex-col justify-center items-center p-12">
                         <div className="w-full max-w-md flex flex-col items-center">
-                            <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-3">
-                                Welcome <Heart className="fill-red-500 text-red-500" />
+                            <h2 className="text-4xl font-bold font-['Playfair_Display'] text-white mb-8 flex items-center gap-3">
+                                Welcome <Heart className="fill-red-500 text-red-500 w-8 h-8" />
                             </h2>
 
                             <div className="w-full space-y-6">
@@ -177,8 +177,8 @@ export default function Auth() {
                     </div>
 
                     <div className="flex flex-col items-center w-full max-w-2xl mx-auto">
-                        <h2 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
-                            Welcome <Heart className="fill-red-500 text-red-500" />
+                        <h2 className="text-4xl font-bold font-['Playfair_Display'] text-white mb-2 flex items-center gap-3">
+                            Welcome <Heart className="fill-red-500 text-red-500 w-8 h-8" />
                         </h2>
                         <p className="text-white/60 mb-10">Kindly fill your details</p>
 
