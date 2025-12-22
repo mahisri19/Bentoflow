@@ -1,21 +1,18 @@
 import { useState } from "react";
-import { Heart, User, Lightbulb, Clock, Coins } from "lucide-react";
+import { Heart } from "lucide-react";
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { supabase } from "../../../lib/supabase";
 
 type AuthView = "login" | "register" | "confirmation";
 
 // Move components outside to avoid re-mounting on every render
-const JugglingIllustration = () => (
-    <div className="relative w-64 h-64 flex items-center justify-center">
-        <div className="absolute inset-0 bg-blue-500/20 blur-3xl rounded-full" />
-        <div className="relative z-10 flex flex-col items-center">
-            <div className="flex gap-4 mb-4 animate-bounce" style={{ animationDuration: '2s' }}>
-                <div className="p-3 bg-yellow-400/20 rounded-full text-yellow-400"><Lightbulb size={24} /></div>
-                <div className="p-3 bg-blue-400/20 rounded-full text-blue-400 mt-[-20px]"><Clock size={24} /></div>
-                <div className="p-3 bg-green-400/20 rounded-full text-green-400"><Coins size={24} /></div>
-            </div>
-            <User size={120} className="text-white/80" />
-        </div>
+const WelcomeAnimation = () => (
+    <div className="w-full max-w-[500px] aspect-square flex items-center justify-center">
+        <DotLottieReact
+            src="https://lottie.host/56ff0290-8c30-4f35-8ac0-c902d07f4813/Yc93Dy7V1j.lottie"
+            loop
+            autoplay
+        />
     </div>
 );
 
@@ -118,7 +115,7 @@ export default function Auth() {
                     {/* Left Side - Illustration */}
                     <div className="w-1/2 flex flex-col justify-center items-center p-12">
                         <h1 className="text-5xl font-bold text-white mb-12">Bento Flow</h1>
-                        <JugglingIllustration />
+                        <WelcomeAnimation />
                     </div>
 
                     {/* Right Side - Login Form */}
