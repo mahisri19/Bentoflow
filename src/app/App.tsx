@@ -296,26 +296,26 @@ export default function App() {
 
   // Home view - dashboard with all sections
   return (
-    <div className="bg-white relative size-full overflow-hidden">
+    <div className="bg-white relative size-full overflow-y-auto md:overflow-hidden">
       {/* Background images */}
-      <div className="absolute h-full w-full left-0 top-0">
+      <div className="fixed md:absolute h-full w-full left-0 top-0">
         <img
           alt=""
           className="absolute inset-0 object-cover size-full"
           src={StarryNightBg}
         />
       </div>
-      <div className="absolute h-full w-full left-0 top-0 blur-[15px]">
+      <div className="fixed md:absolute h-full w-full left-0 top-0 blur-[15px]">
         <img
           alt=""
           className="absolute inset-0 object-cover size-full"
           src={StarryNightBg}
         />
       </div>
-      <div className="absolute bg-black/15 inset-0" />
+      <div className="fixed md:absolute bg-black/15 inset-0" />
 
       {/* Header */}
-      <div className="absolute left-14 top-12 z-10">
+      <div className="absolute left-5 top-5 md:left-14 md:top-12 z-10">
         <button
           onClick={() => setSidebarOpen(true)}
           className="text-white hover:text-white/70 transition-colors"
@@ -328,62 +328,62 @@ export default function App() {
         </button>
       </div>
 
-      <div className="absolute left-1/2 -translate-x-1/2 top-12 text-center z-10">
-        <p className="font-['Be_Vietnam_Pro',sans-serif] text-white mb-1">
+      <div className="absolute left-1/2 -translate-x-1/2 top-5 md:top-12 text-center z-10 w-full px-16 md:px-0">
+        <p className="font-['Be_Vietnam_Pro',sans-serif] text-white mb-1 whitespace-nowrap overflow-hidden text-ellipsis">
           {getGreeting()}, {session?.user?.user_metadata?.full_name || "Mahi"}
         </p>
-        <p className="font-['Be_Vietnam_Pro',sans-serif] text-white/80">
+        <p className="font-['Be_Vietnam_Pro',sans-serif] text-white/80 text-sm md:text-base">
           {formatDate(currentTime)}
         </p>
       </div>
 
-      <div className="absolute right-14 top-12 z-10">
+      <div className="absolute right-5 top-5 md:right-14 md:top-12 z-10 hidden sm:block">
         <p className="font-['Be_Vietnam_Pro',sans-serif] text-white">
           {formatTime(currentTime)}
         </p>
       </div>
 
       {/* Main grid */}
-      <div className="absolute inset-0 top-28 bottom-24 px-14 z-10">
-        <div className="grid grid-cols-12 grid-rows-6 gap-6 h-full">
+      <div className="relative inset-auto top-24 bottom-auto px-4 pb-24 md:absolute md:inset-0 md:top-28 md:bottom-24 md:px-14 z-10 h-auto md:h-full">
+        <div className="grid grid-cols-1 md:grid-cols-12 md:grid-rows-6 gap-4 md:gap-6 h-auto md:h-full">
           {/* Today's Tasks - spans 4 columns, 4 rows */}
-          <div className="col-span-4 row-span-4">
+          <div className="col-span-1 md:col-span-4 md:row-span-4 h-[400px] md:h-auto">
             <TasksSection variant="compact" userId={session?.user?.id} />
           </div>
 
           {/* Habits - spans 8 columns, 2 rows */}
-          <div className="col-span-8 row-span-2">
+          <div className="col-span-1 md:col-span-8 md:row-span-2 h-[200px] md:h-auto">
             <HabitsSection variant="compact" userId={session?.user?.id} />
           </div>
 
           {/* Routine Time - spans 4 columns, 2 rows */}
-          <div className="col-span-4 row-span-2">
+          <div className="col-span-1 md:col-span-4 md:row-span-2 h-[200px] md:h-auto">
             <RoutineSection variant="compact" userId={session?.user?.id} />
           </div>
 
           {/* Timer - spans 4 columns, 2 rows */}
-          <div className="col-span-4 row-span-2">
+          <div className="col-span-1 md:col-span-4 md:row-span-2 h-[300px] md:h-auto">
             <TimerSection variant="compact" userId={session?.user?.id} />
           </div>
 
           {/* Schedule - spans 6 columns, 2 rows */}
-          <div className="col-span-6 row-span-2">
+          <div className="col-span-1 md:col-span-6 md:row-span-2 h-[300px] md:h-auto">
             <ScheduleSection variant="compact" userId={session?.user?.id} />
           </div>
 
           {/* Events - spans 6 columns, 2 rows */}
-          <div className="col-span-6 row-span-2">
+          <div className="col-span-1 md:col-span-6 md:row-span-2 h-[200px] md:h-auto">
             <EventsSection variant="compact" userId={session?.user?.id} />
           </div>
         </div>
       </div>
 
       {/* Thought of the day */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 text-center">
+      <div className="relative md:absolute bottom-8 md:bottom-8 left-1/2 -translate-x-1/2 z-10 text-center w-full px-4 pb-8 md:pb-0">
         <p className="font-['Be_Vietnam_Pro',sans-serif] text-white/60 text-sm mb-1">
           Thought of the day
         </p>
-        <p className="font-['Be_Vietnam_Pro',sans-serif] text-white italic">
+        <p className="font-['Be_Vietnam_Pro',sans-serif] text-white italic text-sm md:text-base">
           "{dailyQuote}"
         </p>
       </div>
