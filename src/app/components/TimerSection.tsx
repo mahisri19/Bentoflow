@@ -226,9 +226,9 @@ export default function TimerSection({ variant = "compact" }: TimerSectionProps)
 
   // Full view
   return (
-    <div className="h-full p-8 flex flex-col items-center justify-center">
+    <div className="h-full md:min-h-full p-4 pt-20 md:p-8 flex flex-col items-center justify-center min-h-[600px]">
       <div className="flex items-center gap-3 mb-8">
-        <h1 className="font-['Be_Vietnam_Pro',sans-serif] text-white text-3xl font-light tracking-wide">TIMER</h1>
+        <h1 className="font-['Be_Vietnam_Pro',sans-serif] text-white text-2xl md:text-3xl font-light tracking-wide">TIMER</h1>
         <button
           onClick={() => {
             setIsEditing(!isEditing);
@@ -244,8 +244,8 @@ export default function TimerSection({ variant = "compact" }: TimerSectionProps)
         </button>
       </div>
 
-      <div className="relative w-72 h-72">
-        <svg className="w-full h-full transform -rotate-90">
+      <div className="relative w-64 h-64 md:w-80 md:h-80">
+        <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 288 288">
           <circle
             cx="144"
             cy="144"
@@ -253,6 +253,7 @@ export default function TimerSection({ variant = "compact" }: TimerSectionProps)
             stroke="rgba(255,255,255,0.1)"
             strokeWidth="16"
             fill="none"
+            strokeLinecap="round"
           />
           <circle
             cx="144"
@@ -267,6 +268,7 @@ export default function TimerSection({ variant = "compact" }: TimerSectionProps)
             className="transition-all duration-1000"
           />
         </svg>
+
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           {isEditing ? (
             <div className="flex flex-col items-center gap-4 bg-black/40 backdrop-blur-md p-6 rounded-3xl border border-white/10">
@@ -289,7 +291,7 @@ export default function TimerSection({ variant = "compact" }: TimerSectionProps)
             </div>
           ) : (
             <>
-              <span className="font-['Be_Vietnam_Pro',sans-serif] text-white text-6xl font-bold tracking-tight mb-2">
+              <span className="font-['Be_Vietnam_Pro',sans-serif] text-white text-5xl md:text-6xl font-bold tracking-tight mb-2">
                 {formatTime(seconds)}
               </span>
               <span className="text-white/40 uppercase tracking-[0.2em] text-sm">{mode}</span>
@@ -322,7 +324,7 @@ export default function TimerSection({ variant = "compact" }: TimerSectionProps)
           <RotateCcw className="w-8 h-8 text-white/40 group-hover:text-white transition-colors" />
         </button>
       </div>
-      <div className="flex gap-4 mt-8">
+      <div className="flex gap-4 mt-8 flex-wrap justify-center">
         <button
           onClick={() => {
             setMode("work");

@@ -301,19 +301,19 @@ export default function EventsSection({ variant = "compact", userId }: EventsSec
 
   // Full view
   return (
-    <div className="h-full p-8 flex flex-col">
+    <div className="h-full md:min-h-full p-4 pt-20 md:p-8 flex flex-col">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="font-['Be_Vietnam_Pro',sans-serif] text-white ml-20 mt-4 text-3xl font-light tracking-wide">EVENTS</h1>
+        <h1 className="font-['Be_Vietnam_Pro',sans-serif] text-white ml-0 md:ml-20 mt-0 md:mt-4 text-2xl md:text-3xl font-light tracking-wide">EVENTS</h1>
         <button
           onClick={() => setIsAddingEvent(true)}
-          className="px-5 py-2.5 bg-purple-500/50 rounded-2xl text-white hover:bg-purple-500/70 transition-colors flex items-center gap-2"
+          className="px-4 py-2 bg-purple-500/50 rounded-2xl text-white hover:bg-purple-500/70 transition-colors flex items-center gap-2 text-sm md:text-base"
         >
           <Plus className="w-4 h-4" />
           Add Event
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 overflow-y-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-24 md:pb-0 overflow-y-auto">
         {events.map((event) => renderEventItem(event, false))}
       </div>
 

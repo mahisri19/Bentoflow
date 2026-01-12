@@ -237,7 +237,7 @@ export default function TasksSection({ variant = "compact", userId }: TasksSecti
         </div>
 
         <Dialog open={isAddingTask} onOpenChange={setIsAddingTask}>
-          <DialogContent className="bg-black/60 backdrop-blur-3xl border-white/10 text-white rounded-[32px] shadow-2xl p-6 sm:p-8">
+          <DialogContent className="bg-black/60 backdrop-blur-3xl border-white/10 text-white rounded-[32px] shadow-2xl p-6 sm:p-8 w-[90%] max-w-md mx-auto">
             <DialogHeader>
               <DialogTitle className="font-['Be_Vietnam_Pro',sans-serif] text-2xl font-semibold text-center mb-2">New Task</DialogTitle>
             </DialogHeader>
@@ -246,13 +246,13 @@ export default function TasksSection({ variant = "compact", userId }: TasksSecti
                 placeholder="Task Name"
                 value={newTask.title || ""}
                 onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                className="bg-white/5 border-white/10 text-white placeholder:text-white/40 rounded-2xl h-12 px-4 focus:bg-white/10 focus:border-white/20 transition-all"
+                className="bg-white/5 border-white/10 text-white placeholder:text-white/40 rounded-2xl h-12 px-4 focus:bg-white/10 focus:border-white/20 transition-all w-full max-w-full min-w-0"
               />
               <Textarea
                 placeholder="Description"
                 value={newTask.description || ""}
                 onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-                className="bg-white/5 border-white/10 text-white placeholder:text-white/40 rounded-2xl min-h-[100px] p-4 focus:bg-white/10 focus:border-white/20 transition-all resize-none"
+                className="bg-white/5 border-white/10 text-white placeholder:text-white/40 rounded-2xl min-h-[100px] p-4 focus:bg-white/10 focus:border-white/20 transition-all resize-none w-full max-w-full min-w-0"
               />
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -260,7 +260,7 @@ export default function TasksSection({ variant = "compact", userId }: TasksSecti
                     type="date"
                     value={newTask.dueDate || ""}
                     onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
-                    className="bg-white/5 border-white/10 text-white rounded-2xl h-12 px-4 focus:bg-white/10 focus:border-white/20 transition-all"
+                    className="bg-white/5 border-white/10 text-white rounded-2xl h-12 px-2 sm:px-4 focus:bg-white/10 focus:border-white/20 transition-all w-full text-sm"
                   />
                 </div>
                 <div className="space-y-2">
@@ -268,7 +268,7 @@ export default function TasksSection({ variant = "compact", userId }: TasksSecti
                     type="time"
                     value={newTask.dueTime || ""}
                     onChange={(e) => setNewTask({ ...newTask, dueTime: e.target.value })}
-                    className="bg-white/5 border-white/10 text-white rounded-2xl h-12 px-4 focus:bg-white/10 focus:border-white/20 transition-all"
+                    className="bg-white/5 border-white/10 text-white rounded-2xl h-12 px-2 sm:px-4 focus:bg-white/10 focus:border-white/20 transition-all w-full text-sm"
                   />
                 </div>
               </div>
@@ -293,7 +293,7 @@ export default function TasksSection({ variant = "compact", userId }: TasksSecti
               </div>
               <Button
                 onClick={handleAddTask}
-                className="w-full h-14 bg-white text-black text-lg font-semibold rounded-2xl hover:bg-white/90 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] active:scale-[0.98]"
+                className="w-full h-12 md:h-14 bg-white text-black text-base md:text-lg font-semibold rounded-2xl hover:bg-white/90 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] active:scale-[0.98]"
               >
                 Create Task
               </Button>
@@ -306,14 +306,14 @@ export default function TasksSection({ variant = "compact", userId }: TasksSecti
 
   // Full view
   return (
-    <div className="h-full p-8 flex flex-col">
+    <div className="h-full md:min-h-full p-4 pt-20 md:p-8 flex flex-col">
       <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-2 mt-4 ml-20">
-          <h1 className="font-['Be_Vietnam_Pro',sans-serif] text-white text-3xl font-light tracking-wide">TASKS</h1>
+        <div className="flex items-center gap-2 mt-0 md:mt-4 md:ml-20">
+          <h1 className="font-['Be_Vietnam_Pro',sans-serif] text-white text-2xl md:text-3xl font-light tracking-wide">TASKS</h1>
         </div>
         <button
           onClick={() => setIsAddingTask(true)}
-          className="px-4 py-2 bg-purple-500/50 rounded-full text-white hover:bg-purple-500/70 transition-colors"
+          className="px-4 py-2 bg-purple-500/50 rounded-full text-white hover:bg-purple-500/70 transition-colors text-sm md:text-base whitespace-nowrap"
         >
           + Add Task
         </button>
@@ -334,9 +334,9 @@ export default function TasksSection({ variant = "compact", userId }: TasksSecti
         ))}
       </div>
 
-      <div className="flex gap-8 h-full overflow-hidden">
+      <div className="flex flex-col-reverse md:flex-row gap-6 md:gap-8 h-auto md:h-full md:overflow-hidden pb-20 md:pb-0">
         {/* Task List - Width 2/3 */}
-        <div className="flex-1 overflow-y-auto pr-2 space-y-3">
+        <div className="w-full flex-1 md:overflow-y-auto pr-0 md:pr-2 space-y-3">
           {filteredTasks.length === 0 ? (
             <div className="text-white/40 text-center py-10">No tasks in this category.</div>
           ) : (
@@ -353,12 +353,12 @@ export default function TasksSection({ variant = "compact", userId }: TasksSecti
                       <Circle className="w-5 h-5 text-white/50" />
                     )}
                   </button>
-                  <div className="flex-1">
-                    <p className={`text-white ${task.completed ? "line-through opacity-50" : ""}`}>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-white truncate ${task.completed ? "line-through opacity-50" : ""}`}>
                       {task.title}
                     </p>
                     {task.description && (
-                      <p className="text-sm text-white/60 mt-1">{task.description}</p>
+                      <p className="text-sm text-white/60 mt-1 line-clamp-2">{task.description}</p>
                     )}
                     <div className="flex gap-2 mt-3 text-xs flex-wrap">
                       {task.category && (
@@ -382,7 +382,7 @@ export default function TasksSection({ variant = "compact", userId }: TasksSecti
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     <span className={`px-2 py-1 rounded text-xs ${task.priority === "high" ? "bg-red-500/30 text-red-200" :
                       task.priority === "med" ? "bg-yellow-500/30 text-yellow-200" :
                         "bg-green-500/30 text-green-200"
@@ -403,7 +403,7 @@ export default function TasksSection({ variant = "compact", userId }: TasksSecti
         </div>
 
         {/* Progress Sidebar - Width 1/3 */}
-        <div className="w-80 bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10 flex flex-col items-center">
+        <div className="w-full md:w-80 bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10 flex flex-col items-center shrink-0 h-fit">
           <h3 className="text-white font-medium mb-6 flex items-center gap-2">
             <Trophy className="w-5 h-5 text-yellow-400" />
             Daily Progress
@@ -454,22 +454,22 @@ export default function TasksSection({ variant = "compact", userId }: TasksSecti
       </div>
 
       <Dialog open={isAddingTask} onOpenChange={setIsAddingTask}>
-        <DialogContent className="bg-black/60 backdrop-blur-3xl border-white/10 text-white rounded-[32px] shadow-2xl p-6 sm:p-8">
+        <DialogContent className="bg-black/60 backdrop-blur-3xl border-white/10 text-white rounded-[32px] shadow-2xl p-4 sm:p-8 w-[90%] max-w-md mx-auto">
           <DialogHeader>
             <DialogTitle className="font-['Be_Vietnam_Pro',sans-serif] text-2xl font-semibold text-center mb-2">New Task</DialogTitle>
           </DialogHeader>
-          <div className="space-y-5">
+          <div className="space-y-5 w-full min-w-0">
             <Input
               placeholder="Task Name"
               value={newTask.title || ""}
               onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-              className="bg-white/5 border-white/10 text-white placeholder:text-white/40 rounded-2xl h-12 px-4 focus:bg-white/10 focus:border-white/20 transition-all"
+              className="bg-white/5 border-white/10 text-white placeholder:text-white/40 rounded-2xl h-12 px-4 focus:bg-white/10 focus:border-white/20 transition-all w-full max-w-full min-w-0"
             />
             <Textarea
               placeholder="Description"
               value={newTask.description || ""}
               onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-              className="bg-white/5 border-white/10 text-white placeholder:text-white/40 rounded-2xl min-h-[100px] p-4 focus:bg-white/10 focus:border-white/20 transition-all resize-none"
+              className="bg-white/5 border-white/10 text-white placeholder:text-white/40 rounded-2xl min-h-[100px] p-4 focus:bg-white/10 focus:border-white/20 transition-all resize-none w-full max-w-full min-w-0"
             />
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -477,7 +477,7 @@ export default function TasksSection({ variant = "compact", userId }: TasksSecti
                   type="date"
                   value={newTask.dueDate || ""}
                   onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
-                  className="bg-white/5 border-white/10 text-white rounded-2xl h-12 px-4 focus:bg-white/10 focus:border-white/20 transition-all"
+                  className="bg-white/5 border-white/10 text-white rounded-2xl h-12 px-2 sm:px-4 focus:bg-white/10 focus:border-white/20 transition-all w-full text-sm"
                 />
               </div>
               <div className="space-y-2">
@@ -485,19 +485,18 @@ export default function TasksSection({ variant = "compact", userId }: TasksSecti
                   type="time"
                   value={newTask.dueTime || ""}
                   onChange={(e) => setNewTask({ ...newTask, dueTime: e.target.value })}
-                  className="bg-white/5 border-white/10 text-white rounded-2xl h-12 px-4 focus:bg-white/10 focus:border-white/20 transition-all"
+                  className="bg-white/5 border-white/10 text-white rounded-2xl h-12 px-2 sm:px-4 focus:bg-white/10 focus:border-white/20 transition-all w-full text-sm"
                 />
               </div>
             </div>
-
             <div>
               <label className="text-sm font-medium text-white/60 mb-3 block">Category</label>
-              <div className="flex gap-2 p-1 bg-white/5 rounded-2xl border border-white/5 overflow-x-auto">
+              <div className="flex gap-2 p-1 bg-white/5 rounded-2xl border border-white/5 overflow-x-auto scrolbar-hide w-full">
                 {(["Work", "Personal", "Health", "General"] as const).map((cat) => (
                   <button
                     key={cat}
                     onClick={() => setNewTask({ ...newTask, category: cat })}
-                    className={`flex-1 min-w-[80px] py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${newTask.category === cat
+                    className={`flex-1 min-w-[70px] py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-300 whitespace-nowrap ${newTask.category === cat
                       ? "bg-white text-black shadow-lg"
                       : "text-white/40 hover:text-white hover:bg-white/5"
                       }`}

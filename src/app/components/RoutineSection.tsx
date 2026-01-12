@@ -172,7 +172,7 @@ export default function RoutineSection({ variant = "compact", userId }: RoutineS
 
   const renderAddModal = () => (
     <Dialog open={isAddingRoutine} onOpenChange={setIsAddingRoutine}>
-      <DialogContent className="bg-[#0f1219]/90 backdrop-blur-3xl border-white/5 text-white rounded-[32px] shadow-2xl p-0 overflow-hidden max-w-md w-full max-h-[85vh] flex flex-col [&>button]:hidden">
+      <DialogContent className="bg-[#0f1219]/90 backdrop-blur-3xl border-white/5 text-white rounded-[32px] shadow-2xl p-0 overflow-hidden max-w-md w-[90vw] mx-auto max-h-[85vh] flex flex-col [&>button]:hidden">
         <div className="p-6 pb-2 flex justify-between items-center shrink-0">
           <button onClick={() => setIsAddingRoutine(false)} className="text-white/40 hover:text-white transition-colors">
             <X className="w-6 h-6" />
@@ -335,7 +335,7 @@ export default function RoutineSection({ variant = "compact", userId }: RoutineS
         <div className="p-6 pt-2 shrink-0">
           <Button
             onClick={handleAddRoutine}
-            className="w-full bg-[#8b5cf6] hover:bg-[#7c3aed] text-white rounded-2xl h-12 text-lg font-medium shadow-lg shadow-purple-500/20 transition-all active:scale-[0.98]"
+            className="w-full bg-[#8b5cf6] hover:bg-[#7c3aed] text-white rounded-2xl h-12 md:h-14 text-base md:text-lg font-medium shadow-lg shadow-purple-500/20 transition-all active:scale-[0.98]"
           >
             Create Routine
           </Button>
@@ -377,7 +377,7 @@ export default function RoutineSection({ variant = "compact", userId }: RoutineS
         setIsEditing(false);
       }
     }}>
-      <DialogContent className="bg-[#1a1f2e]/95 backdrop-blur-3xl border-white/5 text-white rounded-[32px] shadow-2xl p-0 overflow-hidden max-w-md w-full max-h-[85vh] flex flex-col [&>button]:hidden">
+      <DialogContent className="bg-[#1a1f2e]/95 backdrop-blur-3xl border-white/5 text-white rounded-[32px] shadow-2xl p-0 overflow-hidden max-w-md w-[90vw] mx-auto max-h-[85vh] flex flex-col [&>button]:hidden">
         {editingRoutineId && (() => {
           const routine = routines.find((r: Routine) => r.id === editingRoutineId);
           if (!routine) return null;
@@ -549,14 +549,14 @@ export default function RoutineSection({ variant = "compact", userId }: RoutineS
                 <div className="p-6 pt-2 shrink-0 flex gap-3">
                   <Button
                     onClick={handleDeleteRoutine}
-                    className="flex-1 h-12 bg-red-500/10 text-red-400 text-lg font-semibold rounded-2xl hover:bg-red-500/20 transition-all shadow-none"
+                    className="flex-1 h-12 md:h-14 bg-red-500/10 text-red-400 text-base md:text-lg font-semibold rounded-2xl hover:bg-red-500/20 transition-all shadow-none"
                   >
                     <Trash2 className="w-5 h-5 mr-2" />
                     Delete
                   </Button>
                   <Button
                     onClick={handleSaveEdit}
-                    className="flex-[2] h-12 bg-white text-black text-lg font-semibold rounded-2xl hover:bg-white/90 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] active:scale-[0.98]"
+                    className="flex-[2] h-12 md:h-14 bg-white text-black text-base md:text-lg font-semibold rounded-2xl hover:bg-white/90 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] active:scale-[0.98]"
                   >
                     Save Changes
                   </Button>
@@ -685,22 +685,22 @@ export default function RoutineSection({ variant = "compact", userId }: RoutineS
 
   // Full View
   return (
-    <div className="h-full p-8 flex flex-col">
+    <div className="h-full md:min-h-full p-4 pt-20 md:p-8 flex flex-col">
       <div className="flex justify-between items-center mb-8">
-        <div className="flex items-center gap-2 mt-4 ml-20">
+        <div className="flex items-center gap-2 mt-0 md:mt-4 md:ml-20">
           {/* Keeping spacing consistent with other pages */}
-          <h1 className="font-['Be_Vietnam_Pro',sans-serif] text-white text-3xl font-light tracking-wide">ROUTINES</h1>
+          <h1 className="font-['Be_Vietnam_Pro',sans-serif] text-white text-2xl md:text-3xl font-light tracking-wide">ROUTINES</h1>
         </div>
         <button
           onClick={() => setIsAddingRoutine(true)}
-          className="px-5 py-2.5 bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] rounded-2xl text-white font-medium hover:opacity-90 transition-all shadow-lg shadow-purple-500/20 flex items-center gap-2"
+          className="px-4 py-2 bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] rounded-2xl text-white font-medium hover:opacity-90 transition-all shadow-lg shadow-purple-500/20 flex items-center gap-2 text-sm md:text-base"
         >
           <Plus className="w-4 h-4" />
           Add Routine
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 px-0 md:px-20 pb-24 md:pb-0">
         {routines.map((routine) => (
           <div
             key={routine.id}

@@ -70,6 +70,7 @@ export default function ScheduleSection({ variant = "compact", userId }: Schedul
 
   // Item Creation State
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [createType, setCreateType] = useState<"schedule" | "task" | "event">("schedule");
   const [newItem, setNewItem] = useState<any>({});
 
@@ -144,16 +145,17 @@ export default function ScheduleSection({ variant = "compact", userId }: Schedul
   const handleDateClick = (dateStr: string) => {
     setSelectedDate(dateStr);
     setCreateType("schedule");
+    setEditingId(null);
     setNewItem({ date: dateStr, color: COLORS[0], startTime: "09:00", priority: "med" });
     setIsDialogOpen(true);
   };
 
-  const handleCreateItem = () => {
+  const handleSaveItem = () => {
     if (!selectedDate || !newItem.title) return;
 
     if (createType === "schedule") {
       const item: ScheduleItem = {
-        id: Date.now().toString(),
+        id: editingId || Date.now().toString(),
         title: newItem.title,
         startTime: newItem.startTime,
         endTime: newItem.endTime || newItem.startTime,
@@ -162,21 +164,29 @@ export default function ScheduleSection({ variant = "compact", userId }: Schedul
         color: newItem.color || COLORS[0],
         date: selectedDate
       };
-      setScheduleItems([...scheduleItems, item]);
+      if (editingId) {
+        setScheduleItems(scheduleItems.map(i => i.id === editingId ? item : i));
+      } else {
+        setScheduleItems([...scheduleItems, item]);
+      }
     } else if (createType === "task") {
       const task: Task = {
-        id: Date.now().toString(),
+        id: editingId || Date.now().toString(),
         title: newItem.title,
         desc: newItem.description,
         dueDate: selectedDate,
-        completed: false,
+        completed: newItem.completed || false,
         priority: newItem.priority || "med",
         category: "General"
       };
-      setTasks([...tasks, task]);
+      if (editingId) {
+        setTasks(tasks.map(t => t.id === editingId ? task : t));
+      } else {
+        setTasks([...tasks, task]);
+      }
     } else if (createType === "event") {
       const event: Event = {
-        id: Date.now().toString(),
+        id: editingId || Date.now().toString(),
         title: newItem.title,
         date: selectedDate,
         startTime: newItem.startTime,
@@ -184,11 +194,31 @@ export default function ScheduleSection({ variant = "compact", userId }: Schedul
         description: newItem.description,
         color: newItem.color || COLORS[1]
       };
-      setEvents([...events, event]);
+      if (editingId) {
+        setEvents(events.map(e => e.id === editingId ? event : e));
+      } else {
+        setEvents([...events, event]);
+      }
     }
 
     setIsDialogOpen(false);
     setNewItem({});
+    setEditingId(null);
+  };
+
+  const handleDeleteItem = () => {
+    if (!editingId) return;
+
+    if (createType === "schedule") {
+      setScheduleItems(scheduleItems.filter(i => i.id !== editingId));
+    } else if (createType === "task") {
+      setTasks(tasks.filter(t => t.id !== editingId));
+    } else if (createType === "event") {
+      setEvents(events.filter(e => e.id !== editingId));
+    }
+    setIsDialogOpen(false);
+    setNewItem({});
+    setEditingId(null);
   };
 
   // --- Rendering ---
@@ -208,10 +238,26 @@ export default function ScheduleSection({ variant = "compact", userId }: Schedul
     return (
       <div className="flex flex-col gap-1 mt-1 overflow-hidden">
         {allItems.slice(0, 3).map((item: any, idx) => (
-          <div key={idx} className={`text-[10px] truncate px-1 rounded-sm ${item.type === 'task' ? 'bg-green-500/20 text-green-200' :
-            item.type === 'event' ? 'bg-purple-500/20 text-purple-200' :
-              'bg-blue-500/20 text-blue-200'
-            }`}>
+          <div
+            key={idx}
+            onClick={(e) => {
+              e.stopPropagation();
+              setEditingId(item.id);
+              setCreateType(item.type as any);
+              setNewItem({
+                ...item,
+                startTime: item.startTime, // Ensure specific fields map correctly
+                endTime: item.endTime,
+                description: item.desc || item.description // Handle task 'desc' vs others 'description'
+              });
+              setSelectedDate(dateStr);
+              setIsDialogOpen(true);
+            }}
+            className={`text-[10px] truncate px-1 rounded-sm cursor-pointer hover:opacity-80 transition-opacity ${item.type === 'task' ? 'bg-green-500/20 text-green-200' :
+              item.type === 'event' ? 'bg-purple-500/20 text-purple-200' :
+                'bg-blue-500/20 text-blue-200'
+              }`}
+          >
             {item.type === 'task' && <span className="inline-block w-1 h-1 rounded-full bg-green-400 mr-1" />}
             {item.title}
           </div>
@@ -235,7 +281,7 @@ export default function ScheduleSection({ variant = "compact", userId }: Schedul
         <div className="flex justify-between items-center mb-6">
           <h2 className="font-['Be_Vietnam_Pro',sans-serif] text-white opacity-85">Schedule</h2>
           <button
-            onClick={() => { setSelectedDate(todayStr); setCreateType("schedule"); setIsDialogOpen(true); }}
+            onClick={() => { setSelectedDate(todayStr); setCreateType("schedule"); setEditingId(null); setNewItem({}); setIsDialogOpen(true); }}
             className="text-white/70 hover:text-white transition-colors"
           >
             <Plus className="w-5 h-5" />
@@ -248,7 +294,14 @@ export default function ScheduleSection({ variant = "compact", userId }: Schedul
             todaysEvents.map(item => (
               <div
                 key={item.id}
-                className="relative overflow-hidden flex items-stretch gap-3 rounded-xl p-3 group transition-all hover:scale-[1.02] duration-300 border shadow-md"
+                onClick={() => {
+                  setEditingId(item.id);
+                  setCreateType("schedule");
+                  setNewItem({ ...item });
+                  setSelectedDate(item.date || todayStr);
+                  setIsDialogOpen(true);
+                }}
+                className="relative overflow-hidden flex items-stretch gap-3 rounded-xl p-3 group transition-all hover:scale-[1.02] duration-300 border shadow-md cursor-pointer"
                 style={{
                   background: `linear-gradient(to right, ${item.color}25, ${item.color}10)`,
                   borderColor: `${item.color}40`,
@@ -284,39 +337,42 @@ export default function ScheduleSection({ variant = "compact", userId }: Schedul
     );
   }
 
-  // --- Full View (Calendar) ---
+  // Full View (Calendar)
   const days = getDaysInMonth(currentDate);
 
   function renderDialog() {
     return (
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="bg-black/60 backdrop-blur-3xl border-white/10 text-white rounded-[32px] shadow-2xl p-6 sm:p-8 max-w-md">
+        {/* ... dialog content remains the same, assuming Dialog is responsive ... */}
+        <DialogContent className="bg-black/60 backdrop-blur-3xl border-white/10 text-white rounded-[32px] shadow-2xl p-4 sm:p-8 w-[90%] max-w-md mx-auto">
           <DialogHeader>
             <DialogTitle className="font-['Be_Vietnam_Pro',sans-serif] text-2xl font-semibold text-center mb-2">
-              Add to {new Date(selectedDate || "").toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              {editingId ? "Edit Item" : `Add to ${new Date(selectedDate || "").toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
             </DialogTitle>
           </DialogHeader>
 
-          {/* Type Selector */}
-          <div className="flex gap-2 bg-white/5 p-1 rounded-2xl border border-white/5 mb-4">
-            {(['schedule', 'task', 'event'] as const).map(type => (
-              <button
-                key={type}
-                onClick={() => setCreateType(type)}
-                className={`flex-1 py-2 rounded-xl text-sm font-medium capitalize transition-all ${createType === type ? 'bg-white text-black shadow-lg' : 'text-white/60 hover:text-white'
-                  }`}
-              >
-                {type}
-              </button>
-            ))}
-          </div>
+          {/* Type Selector - Hide if editing for simplicity, or allow changing */}
+          {!editingId && (
+            <div className="flex gap-2 bg-white/5 p-1 rounded-2xl border border-white/5 mb-4">
+              {(['schedule', 'task', 'event'] as const).map(type => (
+                <button
+                  key={type}
+                  onClick={() => setCreateType(type)}
+                  className={`flex-1 py-2 rounded-xl text-sm font-medium capitalize transition-all ${createType === type ? 'bg-white text-black shadow-lg' : 'text-white/60 hover:text-white'
+                    }`}
+                >
+                  {type}
+                </button>
+              ))}
+            </div>
+          )}
 
-          <div className="space-y-4">
+          <div className="space-y-4 w-full min-w-0">
             <Input
               placeholder="Title"
               value={newItem.title || ""}
               onChange={(e) => setNewItem({ ...newItem, title: e.target.value })}
-              className="bg-white/5 border-white/10 text-white placeholder:text-white/40 rounded-2xl h-12 px-4"
+              className="bg-white/5 border-white/10 text-white placeholder:text-white/40 rounded-2xl h-12 px-4 w-full max-w-full min-w-0"
               autoFocus
             />
 
@@ -328,7 +384,7 @@ export default function ScheduleSection({ variant = "compact", userId }: Schedul
                     type="time"
                     value={newItem.startTime || ""}
                     onChange={(e) => setNewItem({ ...newItem, startTime: e.target.value })}
-                    className="bg-white/5 border-white/10 text-white rounded-2xl h-12 px-4"
+                    className="bg-white/5 border-white/10 text-white rounded-2xl h-12 px-2 sm:px-4 w-full"
                   />
                 </div>
                 {createType === "schedule" && (
@@ -338,7 +394,7 @@ export default function ScheduleSection({ variant = "compact", userId }: Schedul
                       type="time"
                       value={newItem.endTime || ""}
                       onChange={(e) => setNewItem({ ...newItem, endTime: e.target.value })}
-                      className="bg-white/5 border-white/10 text-white rounded-2xl h-12 px-4"
+                      className="bg-white/5 border-white/10 text-white rounded-2xl h-12 px-2 sm:px-4 w-full"
                     />
                   </div>
                 )}
@@ -376,18 +432,28 @@ export default function ScheduleSection({ variant = "compact", userId }: Schedul
                     placeholder="Add location"
                     value={newItem.location || ""}
                     onChange={(e) => setNewItem({ ...newItem, location: e.target.value })}
-                    className="bg-white/5 border-white/10 text-white rounded-2xl h-12 pl-10 pr-4"
+                    className="bg-white/5 border-white/10 text-white rounded-2xl h-12 pl-10 pr-4 w-full"
                   />
                 </div>
               </div>
             )}
 
-            <Button
-              onClick={handleCreateItem}
-              className="w-full h-14 bg-white text-black text-lg font-semibold rounded-2xl hover:bg-white/90 transition-all mt-4"
-            >
-              Create {createType}
-            </Button>
+            <div className="flex gap-3 mt-4">
+              {editingId && (
+                <Button
+                  onClick={handleDeleteItem}
+                  className="flex-1 h-12 md:h-14 bg-red-500/10 text-red-400 text-base md:text-lg font-semibold rounded-2xl hover:bg-red-500/20 transition-all"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </Button>
+              )}
+              <Button
+                onClick={handleSaveItem}
+                className={`h-12 md:h-14 bg-white text-black text-base md:text-lg font-semibold rounded-2xl hover:bg-white/90 transition-all ${editingId ? 'flex-[3]' : 'w-full'}`}
+              >
+                {editingId ? "Save Changes" : `Create ${createType}`}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -395,13 +461,13 @@ export default function ScheduleSection({ variant = "compact", userId }: Schedul
   }
 
   return (
-    <div className="h-full p-8 flex flex-col">
+    <div className="h-full md:min-h-full p-4 pt-20 md:p-8 flex flex-col">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6 pl-20">
-        <h1 className="font-['Be_Vietnam_Pro',sans-serif] text-white text-3xl font-light tracking-wide">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pl-0 md:pl-20 px-1 gap-4 md:gap-0">
+        <h1 className="font-['Be_Vietnam_Pro',sans-serif] text-white text-2xl md:text-3xl font-light tracking-wide">
           {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
         </h1>
-        <div className="flex gap-2">
+        <div className="flex gap-2 self-end md:self-auto">
           <button
             onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))}
             className="p-2 bg-white/5 hover:bg-white/10 rounded-xl text-white transition-colors"
@@ -423,50 +489,52 @@ export default function ScheduleSection({ variant = "compact", userId }: Schedul
         </div>
       </div>
 
-      {/* Calendar Grid */}
-      <div className="flex-1 bg-[#13161f]/80 backdrop-blur-xl rounded-[24px] border border-white/5 overflow-hidden flex flex-col">
-        {/* Weekday Header */}
-        <div className="grid grid-cols-7 border-b border-white/10">
-          {WEEKDAYS.map(day => (
-            <div key={day} className="py-3 text-center text-white/40 text-sm font-medium uppercase tracking-wider">
-              {day}
-            </div>
-          ))}
-        </div>
-
-        {/* Days Grid */}
-        <div className="flex-1 grid grid-cols-7 grid-rows-5 lg:grid-rows-6">
-          {days.map((day, idx) => {
-            const isToday = day === todayStr;
-            return (
-              <div
-                key={idx}
-                onClick={() => day && handleDateClick(day)}
-                className={`
-                                min-h-[80px] border-r border-b border-white/5 p-2 transition-colors relative group
-                                ${!day ? 'bg-black/20 pointer-events-none' : 'hover:bg-white/5 cursor-pointer'}
-                                ${isToday ? 'bg-white/5' : ''}
-                            `}
-              >
-                {day && (
-                  <>
-                    <span className={`
-                                        text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full
-                                        ${isToday ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/50' : 'text-white/60'}
-                                    `}>
-                      {new Date(day).getDate()}
-                    </span>
-                    {renderCellItems(day)}
-
-                    {/* Hover Add Button */}
-                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Plus className="w-4 h-4 text-white/40" />
-                    </div>
-                  </>
-                )}
+      {/* Calendar Grid Container (Scrollable on mobile) */}
+      <div className="flex-1 overflow-auto rounded-[24px] border border-white/5 bg-[#13161f]/80 backdrop-blur-xl">
+        <div className="min-w-[700px] md:min-w-0 h-full flex flex-col">
+          {/* Weekday Header */}
+          <div className="grid grid-cols-7 border-b border-white/10">
+            {WEEKDAYS.map(day => (
+              <div key={day} className="py-3 text-center text-white/40 text-sm font-medium uppercase tracking-wider">
+                {day}
               </div>
-            );
-          })}
+            ))}
+          </div>
+
+          {/* Days Grid */}
+          <div className="flex-1 grid grid-cols-7 grid-rows-5 lg:grid-rows-6">
+            {days.map((day, idx) => {
+              const isToday = day === todayStr;
+              return (
+                <div
+                  key={idx}
+                  onClick={() => day && handleDateClick(day)}
+                  className={`
+                                  min-h-[80px] border-r border-b border-white/5 p-2 transition-colors relative group
+                                  ${!day ? 'bg-black/20 pointer-events-none' : 'hover:bg-white/5 cursor-pointer'}
+                                  ${isToday ? 'bg-white/5' : ''}
+                              `}
+                >
+                  {day && (
+                    <>
+                      <span className={`
+                                          text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full
+                                          ${isToday ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/50' : 'text-white/60'}
+                                      `}>
+                        {new Date(day).getDate()}
+                      </span>
+                      {renderCellItems(day)}
+
+                      {/* Hover Add Button */}
+                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Plus className="w-4 h-4 text-white/40" />
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 

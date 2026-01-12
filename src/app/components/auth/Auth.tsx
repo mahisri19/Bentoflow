@@ -106,23 +106,23 @@ export default function Auth() {
     // LOGIN VIEW
     if (view === "login") {
         return (
-            <div className="flex w-full h-full bg-[#0a0a16] relative overflow-hidden">
+            <div className="flex w-full h-full bg-[#0a0a16] relative overflow-hidden overflow-y-auto">
                 {/* Background Gradients */}
                 <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[70%] bg-blue-600/20 blur-[120px] rounded-full" />
                 <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[70%] bg-purple-600/20 blur-[120px] rounded-full" />
 
-                <div className="flex w-full max-w-[1200px] mx-auto h-full relative z-10">
+                <div className="flex flex-col md:flex-row w-full max-w-[1200px] mx-auto h-full relative z-10">
                     {/* Left Side - Illustration */}
-                    <div className="w-1/2 flex flex-col justify-center items-center p-12">
-                        <h1 className="text-7xl font-bold font-['Playfair_Display'] text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-100 to-white/80 mb-4 drop-shadow-lg">Bento Flow</h1>
+                    <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-6 md:p-12">
+                        <h1 className="text-5xl md:text-7xl font-bold font-['Playfair_Display'] text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-100 to-white/80 mb-4 drop-shadow-lg text-center md:text-left">Bento Flow</h1>
                         <WelcomeAnimation />
                     </div>
 
                     {/* Right Side - Login Form */}
-                    <div className="w-1/2 flex flex-col justify-center items-center p-12">
+                    <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-6 md:p-12">
                         <div className="w-full max-w-md flex flex-col items-center">
-                            <h2 className="text-4xl font-bold font-['Playfair_Display'] text-white mb-8 flex items-center gap-3">
-                                Welcome <Heart className="fill-red-500 text-red-500 w-8 h-8" />
+                            <h2 className="text-3xl md:text-4xl font-bold font-['Playfair_Display'] text-white mb-8 flex items-center gap-3">
+                                Welcome <Heart className="fill-red-500 text-red-500 w-6 h-6 md:w-8 md:h-8" />
                             </h2>
 
                             <div className="w-full space-y-6">
@@ -165,24 +165,24 @@ export default function Auth() {
     // REGISTER VIEW
     if (view === "register") {
         return (
-            <div className="flex w-full h-full bg-[#0a0a16] relative overflow-hidden items-center justify-center">
+            <div className="flex w-full h-full bg-[#0a0a16] relative overflow-hidden overflow-y-auto items-center justify-center p-4">
                 {/* Background Gradients */}
                 <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[70%] bg-blue-600/20 blur-[120px] rounded-full" />
                 <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[70%] bg-purple-600/20 blur-[120px] rounded-full" />
 
-                <div className="bg-[#0f0f1a]/50 backdrop-blur-xl border border-white/5 rounded-3xl p-12 w-full max-w-4xl relative z-10 shadow-2xl">
-                    <div className="flex justify-between items-start mb-12">
+                <div className="bg-[#0f0f1a]/50 backdrop-blur-xl border border-white/5 rounded-3xl p-6 md:p-12 w-full max-w-4xl relative z-10 shadow-2xl my-auto">
+                    <div className="flex justify-between items-start mb-8 md:mb-12">
                         <button onClick={() => setView("login")} className="text-white/40 font-medium hover:text-white transition-colors">← Login</button>
                         <div className="text-white/40 font-medium">Register</div>
                     </div>
 
                     <div className="flex flex-col items-center w-full max-w-2xl mx-auto">
-                        <h2 className="text-4xl font-bold font-['Playfair_Display'] text-white mb-2 flex items-center gap-3">
-                            Welcome <Heart className="fill-red-500 text-red-500 w-8 h-8" />
+                        <h2 className="text-3xl md:text-4xl font-bold font-['Playfair_Display'] text-white mb-2 flex items-center gap-3">
+                            Welcome <Heart className="fill-red-500 text-red-500 w-6 h-6 md:w-8 md:h-8" />
                         </h2>
-                        <p className="text-white/60 mb-10">Kindly fill your details</p>
+                        <p className="text-white/60 mb-8 md:mb-10 text-center">Kindly fill your details</p>
 
-                        <div className="grid grid-cols-2 gap-x-8 gap-y-6 w-full">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 md:gap-y-6 w-full">
                             <InputField
                                 label="Name"
                                 name="name"
@@ -217,7 +217,7 @@ export default function Auth() {
                         <button
                             onClick={handleRegister}
                             disabled={loading}
-                            className="px-12 bg-[#702459] hover:bg-[#852b6b] disabled:bg-[#702459]/50 text-white py-3 rounded-xl font-medium transition-colors mt-12 shadow-lg shadow-purple-900/20"
+                            className="w-full md:w-auto px-12 bg-[#702459] hover:bg-[#852b6b] disabled:bg-[#702459]/50 text-white py-3 rounded-xl font-medium transition-colors mt-8 md:mt-12 shadow-lg shadow-purple-900/20"
                         >
                             {loading ? "Registering..." : "Register"}
                         </button>

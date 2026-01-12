@@ -246,18 +246,18 @@ export default function HabitsSection({ variant = "compact", userId }: HabitsSec
             setNewHabit({ icon: "droplet", color: "#93c5fd", daysOfWeek: [true, true, true, true, true, true, true] });
           }
         }}>
-          <DialogContent className="bg-black/60 backdrop-blur-3xl border-white/10 text-white rounded-[32px] shadow-2xl p-6 sm:p-8">
+          <DialogContent className="bg-black/60 backdrop-blur-3xl border-white/10 text-white rounded-[32px] shadow-2xl p-4 sm:p-8 w-[90%] max-w-md mx-auto">
             <DialogHeader>
               <DialogTitle className="font-['Be_Vietnam_Pro',sans-serif] text-2xl font-semibold text-center mb-2">
                 {editingHabitId ? "Edit Habit" : "New Habit"}
               </DialogTitle>
             </DialogHeader>
-            <div className="space-y-5">
+            <div className="space-y-5 w-full min-w-0">
               <Input
                 placeholder="Habit Name"
                 value={newHabit.name || ""}
                 onChange={(e) => setNewHabit({ ...newHabit, name: e.target.value })}
-                className="bg-white/5 border-white/10 text-white placeholder:text-white/40 rounded-2xl h-12 px-4 focus:bg-white/10 focus:border-white/20 transition-all"
+                className="bg-white/5 border-white/10 text-white placeholder:text-white/40 rounded-2xl h-12 px-4 focus:bg-white/10 focus:border-white/20 transition-all w-full max-w-full min-w-0"
               />
               <div>
                 <label className="text-sm font-medium text-white/60 mb-3 block">Icon</label>
@@ -266,10 +266,10 @@ export default function HabitsSection({ variant = "compact", userId }: HabitsSec
                     <button
                       key={name}
                       onClick={() => setNewHabit({ ...newHabit, icon: name })}
-                      className={`p-3 rounded-xl transition-all duration-300 ${newHabit.icon === name ? "bg-white text-black shadow-lg scale-105" : "text-white/40 hover:text-white hover:bg-white/5"
+                      className={`p-3 rounded-xl transition-all duration-300 flex justify-center items-center ${newHabit.icon === name ? "bg-white text-black shadow-lg scale-105" : "text-white/40 hover:text-white hover:bg-white/5"
                         }`}
                     >
-                      <Icon className={`w-6 h-6 mx-auto ${newHabit.icon === name ? "text-black" : "text-current"}`} />
+                      <Icon className={`w-6 h-6 ${newHabit.icon === name ? "text-black" : "text-current"}`} />
                     </button>
                   ))}
                 </div>
@@ -281,7 +281,7 @@ export default function HabitsSection({ variant = "compact", userId }: HabitsSec
                     <button
                       key={color}
                       onClick={() => setNewHabit({ ...newHabit, color })}
-                      className={`w-8 h-8 rounded-full transition-all duration-300 ${newHabit.color === color ? "scale-125 ring-2 ring-white ring-offset-2 ring-offset-black" : "hover:scale-110 opacity-70 hover:opacity-100"
+                      className={`w-8 h-8 rounded-full transition-all duration-300 shrink-0 ${newHabit.color === color ? "scale-125 ring-2 ring-white ring-offset-2 ring-offset-black" : "hover:scale-110 opacity-70 hover:opacity-100"
                         }`}
                       style={{ backgroundColor: color }}
                     />
@@ -290,7 +290,7 @@ export default function HabitsSection({ variant = "compact", userId }: HabitsSec
               </div>
               <div>
                 <label className="text-sm font-medium text-white/60 mb-3 block">Days of the Week</label>
-                <div className="flex gap-2 justify-between bg-white/5 p-2 rounded-2xl border border-white/5">
+                <div className="flex gap-1 sm:gap-2 justify-between bg-white/5 p-2 rounded-2xl border border-white/5">
                   {["M", "T", "W", "T", "F", "S", "S"].map((day, index) => (
                     <button
                       key={index}
@@ -299,7 +299,7 @@ export default function HabitsSection({ variant = "compact", userId }: HabitsSec
                         newDays[index] = !newDays[index];
                         setNewHabit({ ...newHabit, daysOfWeek: newDays });
                       }}
-                      className={`w-10 h-10 rounded-xl text-sm font-medium transition-all duration-300 ${newHabit.daysOfWeek?.[index]
+                      className={`flex-1 h-8 sm:h-10 rounded-xl text-xs sm:text-sm font-medium transition-all duration-300 hover:opacity-80 aspect-square flex items-center justify-center ${newHabit.daysOfWeek?.[index]
                         ? "bg-white text-black shadow-lg"
                         : "text-white/40 hover:bg-white/5 hover:text-white"
                         }`}
@@ -311,7 +311,7 @@ export default function HabitsSection({ variant = "compact", userId }: HabitsSec
               </div>
               <Button
                 onClick={saveHabit}
-                className="w-full h-14 bg-white text-black text-lg font-semibold rounded-2xl hover:bg-white/90 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] active:scale-[0.98]"
+                className="w-full h-12 md:h-14 bg-white text-black text-base md:text-lg font-semibold rounded-2xl hover:bg-white/90 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] active:scale-[0.98]"
               >
                 {editingHabitId ? "Save Changes" : "Create Habit"}
               </Button>
@@ -326,42 +326,42 @@ export default function HabitsSection({ variant = "compact", userId }: HabitsSec
 
   // Full view
   return (
-    <div className="h-full p-8 flex flex-col">
+    <div className="min-h-screen p-4 pt-24 md:p-8 flex flex-col">
       <div className="flex justify-between items-center mb-8">
-        <div className="flex items-center gap-2 mt-4 ml-20">
-          <h1 className="font-['Be_Vietnam_Pro',sans-serif] text-white text-3xl font-light tracking-wide">HABITS</h1>
+        <div className="flex items-center gap-2 mt-0 md:mt-4 md:ml-20">
+          <h1 className="font-['Be_Vietnam_Pro',sans-serif] text-white text-2xl md:text-3xl font-light tracking-wide">HABITS</h1>
         </div>
         <button
           onClick={() => setIsAddingHabit(true)}
-          className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl text-white font-medium hover:opacity-90 transition-all shadow-lg shadow-blue-500/20 flex items-center gap-2"
+          className="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl text-white font-medium hover:opacity-90 transition-all shadow-lg shadow-blue-500/20 flex items-center gap-2 text-sm md:text-base shrink-0"
         >
           <Plus className="w-4 h-4" />
           Add Habit
         </button>
       </div>
 
-      <div className="flex gap-2 mb-8 ml-20">
+      <div className="flex flex-wrap gap-2 mb-8 ml-0 md:ml-20 z-10 relative">
         <button
           onClick={() => setActiveTab("today")}
-          className={`px-6 py-2 rounded-full transition-all text-sm font-medium ${activeTab === "today"
-            ? "bg-white text-black"
-            : "bg-white/5 text-white/60 hover:text-white"
+          className={`px-6 py-2 rounded-full transition-all text-sm font-medium whitespace-nowrap shrink-0 ${activeTab === "today"
+            ? "bg-white text-black shadow-lg"
+            : "border border-white/20 bg-transparent text-white/70 hover:text-white"
             }`}
         >
           Today
         </button>
         <button
           onClick={() => setActiveTab("all")}
-          className={`px-6 py-2 rounded-full transition-all text-sm font-medium ${activeTab === "all"
-            ? "bg-white text-black"
-            : "bg-white/5 text-white/60 hover:text-white"
+          className={`px-6 py-2 rounded-full transition-all text-sm font-medium whitespace-nowrap shrink-0 ${activeTab === "all"
+            ? "bg-white text-black shadow-lg"
+            : "border border-white/20 bg-transparent text-white/70 hover:text-white"
             }`}
         >
           All Habits
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 px-20 overflow-y-auto">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 px-0 md:px-20 pb-24 md:pb-0 md:overflow-y-auto">
         {(activeTab === "today" ? todaysHabits : habits).map((habit) => {
           const Icon = getIcon(habit.icon);
           return (
@@ -439,16 +439,16 @@ export default function HabitsSection({ variant = "compact", userId }: HabitsSec
       </div>
 
       <Dialog open={isAddingHabit} onOpenChange={setIsAddingHabit}>
-        <DialogContent className="bg-black/60 backdrop-blur-3xl border-white/10 text-white rounded-[32px] shadow-2xl p-6 sm:p-8">
+        <DialogContent className="bg-black/60 backdrop-blur-3xl border-white/10 text-white rounded-[32px] shadow-2xl p-4 sm:p-8 w-[90%] max-w-md mx-auto">
           <DialogHeader>
             <DialogTitle className="font-['Be_Vietnam_Pro',sans-serif] text-2xl font-semibold text-center mb-2">New Habit</DialogTitle>
           </DialogHeader>
-          <div className="space-y-5">
+          <div className="space-y-5 w-full min-w-0">
             <Input
               placeholder="Habit Name"
               value={newHabit.name || ""}
               onChange={(e) => setNewHabit({ ...newHabit, name: e.target.value })}
-              className="bg-white/5 border-white/10 text-white placeholder:text-white/40 rounded-2xl h-12 px-4 focus:bg-white/10 focus:border-white/20 transition-all"
+              className="bg-white/5 border-white/10 text-white placeholder:text-white/40 rounded-2xl h-12 px-4 focus:bg-white/10 focus:border-white/20 transition-all w-full max-w-full min-w-0"
             />
             <div>
               <label className="text-sm font-medium text-white/60 mb-3 block">Icon</label>
@@ -457,10 +457,10 @@ export default function HabitsSection({ variant = "compact", userId }: HabitsSec
                   <button
                     key={name}
                     onClick={() => setNewHabit({ ...newHabit, icon: name })}
-                    className={`p-3 rounded-xl transition-all duration-300 ${newHabit.icon === name ? "bg-white text-black shadow-lg scale-105" : "text-white/40 hover:text-white hover:bg-white/5"
+                    className={`p-3 rounded-xl transition-all duration-300 flex justify-center items-center ${newHabit.icon === name ? "bg-white text-black shadow-lg scale-105" : "text-white/40 hover:text-white hover:bg-white/5"
                       }`}
                   >
-                    <Icon className={`w-6 h-6 mx-auto ${newHabit.icon === name ? "text-black" : "text-current"}`} />
+                    <Icon className={`w-6 h-6 ${newHabit.icon === name ? "text-black" : "text-current"}`} />
                   </button>
                 ))}
               </div>
@@ -472,7 +472,7 @@ export default function HabitsSection({ variant = "compact", userId }: HabitsSec
                   <button
                     key={color}
                     onClick={() => setNewHabit({ ...newHabit, color })}
-                    className={`w-8 h-8 rounded-full transition-all duration-300 ${newHabit.color === color ? "scale-125 ring-2 ring-white ring-offset-2 ring-offset-black" : "hover:scale-110 opacity-70 hover:opacity-100"
+                    className={`w-8 h-8 rounded-full transition-all duration-300 shrink-0 ${newHabit.color === color ? "scale-125 ring-2 ring-white ring-offset-2 ring-offset-black" : "hover:scale-110 opacity-70 hover:opacity-100"
                       }`}
                     style={{ backgroundColor: color }}
                   />
@@ -481,7 +481,7 @@ export default function HabitsSection({ variant = "compact", userId }: HabitsSec
             </div>
             <div>
               <label className="text-sm font-medium text-white/60 mb-3 block">Days of the Week</label>
-              <div className="flex gap-2 justify-between bg-white/5 p-2 rounded-2xl border border-white/5">
+              <div className="flex gap-1 sm:gap-2 justify-between bg-white/5 p-2 rounded-2xl border border-white/5">
                 {["M", "T", "W", "T", "F", "S", "S"].map((day, index) => (
                   <button
                     key={index}
@@ -490,7 +490,7 @@ export default function HabitsSection({ variant = "compact", userId }: HabitsSec
                       newDays[index] = !newDays[index];
                       setNewHabit({ ...newHabit, daysOfWeek: newDays });
                     }}
-                    className={`w-10 h-10 rounded-xl text-sm font-medium transition-all duration-300 ${newHabit.daysOfWeek?.[index]
+                    className={`flex-1 h-8 sm:h-10 rounded-xl text-xs sm:text-sm font-medium transition-all duration-300 hover:opacity-80 aspect-square flex items-center justify-center ${newHabit.daysOfWeek?.[index]
                       ? "bg-white text-black shadow-lg"
                       : "text-white/40 hover:bg-white/5 hover:text-white"
                       }`}

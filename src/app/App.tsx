@@ -96,31 +96,31 @@ export default function App() {
   // Render full view for specific sections
   if (currentView === "tasks") {
     return (
-      <div className="bg-white relative size-full overflow-hidden">
-        <div className="absolute h-full w-full left-0 top-0">
+      <div className="bg-white relative min-h-screen w-full overflow-auto">
+        <div className="absolute h-full w-full left-0 top-0 fixed">
           <img
             alt=""
             className="absolute inset-0 object-cover size-full"
             src={StarryNightBg}
           />
         </div>
-        <div className="absolute h-full w-full left-0 top-0 blur-[15px]">
+        <div className="absolute h-full w-full left-0 top-0 blur-[15px] fixed">
           <img
             alt=""
             className="absolute inset-0 object-cover size-full"
             src={StarryNightBg}
           />
         </div>
-        <div className="absolute bg-black/15 inset-0" />
+        <div className="absolute bg-black/15 inset-0 fixed" />
 
         <button
           onClick={() => setSidebarOpen(true)}
-          className="absolute left-14 top-12 text-white hover:text-white/70 transition-colors z-10"
+          className="absolute left-5 top-5 md:left-14 md:top-12 text-white hover:text-white/70 transition-colors z-20"
         >
           <Menu className="w-8 h-8" />
         </button>
 
-        <div className="relative h-full">
+        <div className="relative min-h-full z-10">
           <TasksSection variant="full" userId={session?.user?.id} />
         </div>
 
@@ -136,31 +136,31 @@ export default function App() {
 
   if (currentView === "habits") {
     return (
-      <div className="bg-white relative size-full overflow-hidden">
-        <div className="absolute h-full w-full left-0 top-0">
+      <div className="bg-white relative min-h-screen w-full overflow-auto">
+        <div className="absolute h-full w-full left-0 top-0 fixed">
           <img
             alt=""
             className="absolute inset-0 object-cover size-full"
             src={StarryNightBg}
           />
         </div>
-        <div className="absolute h-full w-full left-0 top-0 blur-[15px]">
+        <div className="absolute h-full w-full left-0 top-0 blur-[15px] fixed">
           <img
             alt=""
             className="absolute inset-0 object-cover size-full"
             src={StarryNightBg}
           />
         </div>
-        <div className="absolute bg-black/15 inset-0" />
+        <div className="absolute bg-black/15 inset-0 fixed" />
 
         <button
           onClick={() => setSidebarOpen(true)}
-          className="absolute left-14 top-12 text-white hover:text-white/70 transition-colors z-10"
+          className="absolute left-5 top-5 md:left-14 md:top-12 text-white hover:text-white/70 transition-colors z-20"
         >
           <Menu className="w-8 h-8" />
         </button>
 
-        <div className="relative h-full">
+        <div className="relative min-h-full z-10">
           <HabitsSection variant="full" userId={session?.user?.id} />
         </div>
 
@@ -195,7 +195,7 @@ export default function App() {
 
         <button
           onClick={() => setSidebarOpen(true)}
-          className="absolute left-14 top-12 text-white hover:text-white/70 transition-colors z-10"
+          className="absolute left-5 top-5 md:left-14 md:top-12 text-white hover:text-white/70 transition-colors z-10"
         >
           <Menu className="w-8 h-8" />
         </button>
@@ -235,7 +235,7 @@ export default function App() {
 
         <button
           onClick={() => setSidebarOpen(true)}
-          className="absolute left-14 top-12 text-white hover:text-white/70 transition-colors z-10"
+          className="absolute left-5 top-5 md:left-14 md:top-12 text-white hover:text-white/70 transition-colors z-10"
         >
           <Menu className="w-8 h-8" />
         </button>
@@ -275,7 +275,7 @@ export default function App() {
 
         <button
           onClick={() => setSidebarOpen(true)}
-          className="absolute left-14 top-12 text-white hover:text-white/70 transition-colors z-10"
+          className="absolute left-5 top-5 md:left-14 md:top-12 text-white hover:text-white/70 transition-colors z-10"
         >
           <Menu className="w-8 h-8" />
         </button>
@@ -344,7 +344,7 @@ export default function App() {
       </div>
 
       {/* Main grid */}
-      <div className="relative inset-auto top-24 bottom-auto px-4 pb-24 md:absolute md:inset-0 md:top-32 md:bottom-20 md:px-14 z-10 h-auto">
+      <div className="relative inset-auto top-24 bottom-auto px-4 pb-24 md:absolute md:inset-0 md:top-35 md:bottom-15 md:px-14 z-10 h-auto">
         <div className="grid grid-cols-1 md:grid-cols-12 md:grid-rows-6 gap-4 md:gap-5 h-auto md:h-full">
           {/* Today's Tasks - spans 4 columns, 4 rows */}
           <div className="col-span-1 md:col-span-4 md:row-span-4 h-[400px] md:h-auto">
