@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
+import { supabase } from "../../lib/supabase";
 
 // Types
 type ScheduleItem = {
@@ -56,6 +57,7 @@ const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export default function ScheduleSection({ variant = "compact", userId }: ScheduleSectionProps) {
   const effectiveUserId = userId || "guest";
+  const isGuest = effectiveUserId === "guest";
   const todayStr = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split('T')[0];
 
   // State for different item types
@@ -150,12 +152,13 @@ export default function ScheduleSection({ variant = "compact", userId }: Schedul
     setIsDialogOpen(true);
   };
 
-  const handleSaveItem = () => {
+  const handleSaveItem = async () => {
     if (!selectedDate || !newItem.title) return;
 
     if (createType === "schedule") {
+      const tempId = editingId || Date.now().toString();
       const item: ScheduleItem = {
-        id: editingId || Date.now().toString(),
+        id: tempId,
         title: newItem.title,
         startTime: newItem.startTime,
         endTime: newItem.endTime || newItem.startTime,
@@ -164,14 +167,34 @@ export default function ScheduleSection({ variant = "compact", userId }: Schedul
         color: newItem.color || COLORS[0],
         date: selectedDate
       };
-      if (editingId) {
-        setScheduleItems(scheduleItems.map(i => i.id === editingId ? item : i));
-      } else {
-        setScheduleItems([...scheduleItems, item]);
+
+      setScheduleItems(prev => editingId ? prev.map(i => i.id === editingId ? item : i) : [...prev, item]);
+
+      if (!isGuest) {
+        const payload = {
+          user_id: userId,
+          title: item.title,
+          start_time: item.startTime,
+          end_time: item.endTime,
+          location: item.location,
+          description: item.description,
+          color: item.color,
+          date: item.date
+        };
+        if (editingId) {
+          await supabase.from('schedule_items').update(payload).eq('id', editingId);
+        } else {
+          const { data } = await supabase.from('schedule_items').insert([payload]).select();
+          if (data && data[0]) {
+            setScheduleItems(prev => prev.map(i => i.id === tempId ? { ...i, id: data[0].id } : i));
+          }
+        }
       }
+
     } else if (createType === "task") {
+      const tempId = editingId || Date.now().toString();
       const task: Task = {
-        id: editingId || Date.now().toString(),
+        id: tempId,
         title: newItem.title,
         desc: newItem.description,
         dueDate: selectedDate,
@@ -179,14 +202,33 @@ export default function ScheduleSection({ variant = "compact", userId }: Schedul
         priority: newItem.priority || "med",
         category: "General"
       };
-      if (editingId) {
-        setTasks(tasks.map(t => t.id === editingId ? task : t));
-      } else {
-        setTasks([...tasks, task]);
+
+      setTasks(prev => editingId ? prev.map(t => t.id === editingId ? task : t) : [...prev, task]);
+
+      if (!isGuest) {
+        const payload = {
+          user_id: userId,
+          title: task.title,
+          description: task.desc,
+          due_date: task.dueDate,
+          priority: task.priority,
+          completed: task.completed,
+          category: "General"
+        };
+        if (editingId) {
+          await supabase.from('tasks').update(payload).eq('id', editingId);
+        } else {
+          const { data } = await supabase.from('tasks').insert([payload]).select();
+          if (data && data[0]) {
+            setTasks(prev => prev.map(t => t.id === tempId ? { ...t, id: data[0].id } : t));
+          }
+        }
       }
+
     } else if (createType === "event") {
+      const tempId = editingId || Date.now().toString();
       const event: Event = {
-        id: editingId || Date.now().toString(),
+        id: tempId,
         title: newItem.title,
         date: selectedDate,
         startTime: newItem.startTime,
@@ -194,10 +236,27 @@ export default function ScheduleSection({ variant = "compact", userId }: Schedul
         description: newItem.description,
         color: newItem.color || COLORS[1]
       };
-      if (editingId) {
-        setEvents(events.map(e => e.id === editingId ? event : e));
-      } else {
-        setEvents([...events, event]);
+
+      setEvents(prev => editingId ? prev.map(e => e.id === editingId ? event : e) : [...prev, event]);
+
+      if (!isGuest) {
+        const payload = {
+          user_id: userId,
+          title: event.title,
+          date: event.date,
+          start_time: event.startTime,
+          location: event.location,
+          description: event.description,
+          color: event.color
+        };
+        if (editingId) {
+          await supabase.from('events').update(payload).eq('id', editingId);
+        } else {
+          const { data } = await supabase.from('events').insert([payload]).select();
+          if (data && data[0]) {
+            setEvents(prev => prev.map(e => e.id === tempId ? { ...e, id: data[0].id } : e));
+          }
+        }
       }
     }
 
@@ -206,15 +265,18 @@ export default function ScheduleSection({ variant = "compact", userId }: Schedul
     setEditingId(null);
   };
 
-  const handleDeleteItem = () => {
+  const handleDeleteItem = async () => {
     if (!editingId) return;
 
     if (createType === "schedule") {
       setScheduleItems(scheduleItems.filter(i => i.id !== editingId));
+      if (!isGuest) await supabase.from('schedule_items').delete().eq('id', editingId);
     } else if (createType === "task") {
       setTasks(tasks.filter(t => t.id !== editingId));
+      if (!isGuest) await supabase.from('tasks').delete().eq('id', editingId);
     } else if (createType === "event") {
       setEvents(events.filter(e => e.id !== editingId));
+      if (!isGuest) await supabase.from('events').delete().eq('id', editingId);
     }
     setIsDialogOpen(false);
     setNewItem({});

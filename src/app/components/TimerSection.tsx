@@ -1,19 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Play, Pause, RotateCcw, Settings, X, Check } from "lucide-react";
 import confetti from "canvas-confetti";
 import { Input } from "./ui/input";
+import { supabase } from "../../lib/supabase";
 
 type TimerSectionProps = {
   variant?: "compact" | "full";
   userId?: string;
 };
 
-export default function TimerSection({ variant = "compact" }: TimerSectionProps) {
+export default function TimerSection({ variant = "compact", userId }: TimerSectionProps) {
   const [seconds, setSeconds] = useState(1500); // 25 minutes in seconds
   const [isRunning, setIsRunning] = useState(false);
   const [mode, setMode] = useState<"work" | "break">("work");
   const [isEditing, setIsEditing] = useState(false);
   const [customInput, setCustomInput] = useState("25");
+  const isGuest = !userId || userId === "guest";
+
   const [totalFocusTime, setTotalFocusTime] = useState(() => {
     const saved = localStorage.getItem("bentoflow_focus_time");
     const savedDate = localStorage.getItem("bentoflow_focus_date");
@@ -24,10 +27,53 @@ export default function TimerSection({ variant = "compact" }: TimerSectionProps)
     return 0;
   });
 
+  // Load from DB
+  useEffect(() => {
+    async function loadStats() {
+      if (!isGuest) {
+        const { data } = await supabase.from('user_stats').select('total_focus_time').eq('user_id', userId).single();
+        if (data) {
+          setTotalFocusTime(data.total_focus_time || 0);
+        }
+      }
+    }
+    loadStats();
+  }, [userId, isGuest]);
+
+  // Save to LocalStorage
   useEffect(() => {
     localStorage.setItem("bentoflow_focus_time", totalFocusTime.toString());
     localStorage.setItem("bentoflow_focus_date", new Date().toDateString());
   }, [totalFocusTime]);
+
+  // Sync to DB on pause or periodic
+  useEffect(() => {
+    if (!isGuest && !isRunning && totalFocusTime > 0) {
+      // Sync when paused
+      const sync = async () => {
+        await supabase.from('user_stats').upsert({
+          user_id: userId,
+          total_focus_time: totalFocusTime,
+          last_updated_date: new Date().toISOString()
+        });
+      };
+      sync();
+    }
+  }, [isRunning, totalFocusTime, isGuest, userId]);
+
+  // Periodic sync (every 1 min)
+  useEffect(() => {
+    if (isRunning && !isGuest) {
+      const interval = setInterval(async () => {
+        await supabase.from('user_stats').upsert({
+          user_id: userId,
+          total_focus_time: totalFocusTime,
+          last_updated_date: new Date().toISOString()
+        });
+      }, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [isRunning, totalFocusTime, isGuest, userId]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
