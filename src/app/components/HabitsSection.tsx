@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import confetti from "canvas-confetti";
+import { supabase } from "../../lib/supabase";
 
 type Habit = {
   id: string;
@@ -46,50 +47,97 @@ export default function HabitsSection({ variant = "compact", userId }: HabitsSec
   const [habits, setHabits] = useState<Habit[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const effectiveUserId = userId || "guest";
+  const isGuest = !userId || userId === "guest";
 
   useEffect(() => {
-    const saved = localStorage.getItem(`bentoflow_habits_${effectiveUserId}`);
-    if (saved) {
-      setHabits(JSON.parse(saved));
-    } else {
-      setHabits([
-        {
-          id: "1",
-          name: "Drink Water",
-          icon: "droplet",
-          color: "#93c5fd",
-          streak: 5,
-          daysOfWeek: [true, true, true, true, true, true, true],
-          completedToday: false,
-        },
-        {
-          id: "2",
-          name: "Meditation",
-          icon: "sparkles",
-          color: "#f9a8d4",
-          streak: 3,
-          daysOfWeek: [true, true, true, true, true, false, false],
-          completedToday: false,
-        },
-        {
-          id: "3",
-          name: "Evening Walk",
-          icon: "footprints",
-          color: "#6ee7b7",
-          streak: 7,
-          daysOfWeek: [false, true, false, true, false, true, true],
-          completedToday: true,
-        },
-      ]);
+    async function loadHabits() {
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      if (!isGuest) {
+        // Check/Migrate Local
+        const localData = localStorage.getItem(`bentoflow_habits_${effectiveUserId}`);
+        if (localData) {
+          try {
+            const localHabits: Habit[] = JSON.parse(localData);
+            if (localHabits.length > 0) {
+              const dbHabits = localHabits.map(h => ({
+                user_id: userId,
+                name: h.name,
+                icon: h.icon,
+                color: h.color,
+                streak: h.streak,
+                days_of_week: h.daysOfWeek,
+                completed_dates: h.completedToday ? [todayStr] : []
+              }));
+              const { error } = await supabase.from('habits').insert(dbHabits);
+              if (!error) localStorage.removeItem(`bentoflow_habits_${effectiveUserId}`);
+            }
+          } catch (e) {
+            console.error("Migration failed", e);
+          }
+        }
+
+        // Fetch
+        const { data, error } = await supabase.from('habits').select('*');
+        if (!error && data) {
+          const mapped: Habit[] = data.map((d: any) => ({
+            id: d.id,
+            name: d.name,
+            icon: d.icon,
+            color: d.color,
+            streak: d.streak,
+            daysOfWeek: d.days_of_week,
+            completedToday: d.completed_dates?.includes(todayStr) || false
+          }));
+          setHabits(mapped);
+        }
+      } else {
+        const saved = localStorage.getItem(`bentoflow_habits_${effectiveUserId}`);
+        if (saved) {
+          setHabits(JSON.parse(saved));
+        } else {
+          setHabits([
+            {
+              id: "1",
+              name: "Drink Water",
+              icon: "droplet",
+              color: "#93c5fd",
+              streak: 5,
+              daysOfWeek: [true, true, true, true, true, true, true],
+              completedToday: false,
+            },
+            {
+              id: "2",
+              name: "Meditation",
+              icon: "sparkles",
+              color: "#f9a8d4",
+              streak: 3,
+              daysOfWeek: [true, true, true, true, true, false, false],
+              completedToday: false,
+            },
+            {
+              id: "3",
+              name: "Evening Walk",
+              icon: "footprints",
+              color: "#6ee7b7",
+              streak: 7,
+              daysOfWeek: [false, true, false, true, false, true, true],
+              completedToday: true,
+            },
+          ]);
+        }
+      }
+      setIsLoaded(true);
     }
-    setIsLoaded(true);
-  }, [effectiveUserId]);
+    loadHabits();
+  }, [effectiveUserId, isGuest]);
 
   useEffect(() => {
-    if (isLoaded) {
+    if (isLoaded && isGuest) {
       localStorage.setItem(`bentoflow_habits_${effectiveUserId}`, JSON.stringify(habits));
     }
-  }, [habits, effectiveUserId, isLoaded]);
+  }, [habits, effectiveUserId, isLoaded, isGuest]);
+
   // Get habits for today
   const dayOfWeek = (new Date().getDay() + 6) % 7; // Convert Sunday=0...Saturday=6 to Monday=0...Sunday=6
   const todaysHabits = habits.filter(h => h.daysOfWeek[dayOfWeek]);
@@ -116,11 +164,12 @@ export default function HabitsSection({ variant = "compact", userId }: HabitsSec
     daysOfWeek: [true, true, true, true, true, true, true],
   });
 
-  const handleAddHabit = () => {
+  const handleAddHabit = async () => {
     if (!newHabit.name) return;
 
+    const tempId = Date.now().toString();
     const habit: Habit = {
-      id: Date.now().toString(),
+      id: tempId,
       name: newHabit.name,
       icon: newHabit.icon || "droplet",
       color: newHabit.color || "#93c5fd",
@@ -132,11 +181,28 @@ export default function HabitsSection({ variant = "compact", userId }: HabitsSec
     setHabits([...habits, habit]);
     setNewHabit({ icon: "droplet", color: "#93c5fd", daysOfWeek: [true, true, true, true, true, true, true] });
     setIsAddingHabit(false);
+
+    if (!isGuest) {
+      const { data } = await supabase.from('habits').insert([{
+        user_id: userId,
+        name: habit.name,
+        icon: habit.icon,
+        color: habit.color,
+        streak: 0,
+        days_of_week: habit.daysOfWeek,
+        completed_dates: []
+      }]).select();
+
+      if (data && data[0]) {
+        setHabits(prev => prev.map(h => h.id === tempId ? { ...h, id: data[0].id } : h));
+      }
+    }
   };
 
-  const deleteHabit = (id: string, e: React.MouseEvent) => {
+  const deleteHabit = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setHabits(habits.filter(h => h.id !== id));
+    if (!isGuest) await supabase.from('habits').delete().eq('id', id);
   };
 
   const [editingHabitId, setEditingHabitId] = useState<string | null>(null);
@@ -153,7 +219,7 @@ export default function HabitsSection({ variant = "compact", userId }: HabitsSec
     setIsAddingHabit(true);
   };
 
-  const saveHabit = () => {
+  const saveHabit = async () => {
     if (!newHabit.name) return;
 
     if (editingHabitId) {
@@ -162,30 +228,69 @@ export default function HabitsSection({ variant = "compact", userId }: HabitsSec
           ? { ...h, ...newHabit } as Habit
           : h
       ));
+
+      if (!isGuest) {
+        await supabase.from('habits').update({
+          name: newHabit.name,
+          icon: newHabit.icon,
+          color: newHabit.color,
+          days_of_week: newHabit.daysOfWeek
+        }).eq('id', editingHabitId);
+      }
+
       setEditingHabitId(null);
     } else {
       handleAddHabit();
     }
-    // handleAddHabit handles closing dialog and resetting newHabit if not editing
-    // If editing, we need to manually close and reset
+
     if (editingHabitId) {
       setIsAddingHabit(false);
       setNewHabit({ icon: "droplet", color: "#93c5fd", daysOfWeek: [true, true, true, true, true, true, true] });
     }
   };
 
-  const toggleHabit = (id: string) => {
-    setHabits(habits.map(habit => {
-      if (habit.id === id) {
-        const wasCompleted = habit.completedToday;
+  const toggleHabit = async (id: string) => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const habit = habits.find(h => h.id === id);
+    if (!habit) return;
+
+    const wasCompleted = habit.completedToday;
+    const newCompleted = !wasCompleted;
+    const newStreak = newCompleted ? habit.streak + 1 : Math.max(0, habit.streak - 1);
+
+    setHabits(habits.map(h => {
+      if (h.id === id) {
         return {
-          ...habit,
-          completedToday: !wasCompleted,
-          streak: !wasCompleted ? habit.streak + 1 : Math.max(0, habit.streak - 1),
+          ...h,
+          completedToday: newCompleted,
+          streak: newStreak
         };
       }
-      return habit;
+      return h;
     }));
+
+    if (!isGuest) {
+      // We need to fetch current completed_dates from DB or assume we have it. 
+      // Simplest: Fetch current record to get array, then update.
+      // OR: maintain a local cache of `completed_dates`. 
+      // Our local `habit` object only has `completedToday`.
+      // We really should strictly store `completed_dates` in local state if we want to update correctly without fetching.
+      // However, fetching a single row is fast.
+
+      const { data } = await supabase.from('habits').select('completed_dates').eq('id', id).single();
+      if (data) {
+        let dates = data.completed_dates || [];
+        if (newCompleted) {
+          if (!dates.includes(todayStr)) dates.push(todayStr);
+        } else {
+          dates = dates.filter((d: string) => d !== todayStr);
+        }
+        await supabase.from('habits').update({
+          streak: newStreak,
+          completed_dates: dates
+        }).eq('id', id);
+      }
+    }
   };
 
   const getIcon = (iconName: string) => {

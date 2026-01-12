@@ -3,6 +3,7 @@ import { Plus, X, Sun, Moon, Calendar, CheckCircle, Circle, Maximize2, Clock, Tr
 import { Dialog, DialogContent } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { supabase } from "../../lib/supabase";
 
 type ChecklistItem = {
   id: string;
@@ -45,41 +46,76 @@ export default function RoutineSection({ variant = "compact", userId }: RoutineS
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const effectiveUserId = userId || "guest";
+  const isGuest = !userId || userId === "guest";
 
-  // Load from localStorage on mount or when userId changes
+  // Load Data
   useEffect(() => {
-    const saved = localStorage.getItem(`bentoflow_routines_${effectiveUserId}`);
-    if (saved) {
-      setRoutines(JSON.parse(saved));
-    } else {
-      // Default routines if nothing saved
-      setRoutines([
-        {
-          id: "1",
-          title: "Morning Routine",
-          startTime: "7:00 AM",
-          endTime: "9:00 AM",
-          days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-          icon: "sun",
-          color: "#facc15",
-          checklist: [
-            { id: "1", text: "Wake up", completed: false },
-            { id: "2", text: "Shower", completed: false },
-            { id: "3", text: "Prayer", completed: false },
-            { id: "4", text: "Breakfast", completed: false },
-          ],
-        },
-      ]);
+    async function loadRoutines() {
+      if (!isGuest) {
+        // Migrate Local
+        const localData = localStorage.getItem(`bentoflow_routines_${effectiveUserId}`);
+        if (localData) {
+          try {
+            const localRoutines: Routine[] = JSON.parse(localData);
+            if (localRoutines.length > 0) {
+              const dbRoutines = localRoutines.map(r => ({
+                user_id: userId,
+                title: r.title,
+                start_time: r.startTime,
+                end_time: r.endTime,
+                days_of_week: r.days,
+                icon: r.icon,
+                color: r.color,
+                items: r.checklist
+              }));
+              const { error } = await supabase.from('routines').insert(dbRoutines);
+              if (!error) localStorage.removeItem(`bentoflow_routines_${effectiveUserId}`);
+            }
+          } catch (e) {
+            console.error("Migration error", e);
+          }
+        }
+
+        // Fetch
+        const { data, error } = await supabase.from('routines').select('*');
+        if (!error && data) {
+          const mapped = data.map((d: any) => ({
+            id: d.id,
+            title: d.title,
+            startTime: d.start_time,
+            endTime: d.end_time,
+            days: d.days_of_week || [],
+            icon: d.icon,
+            color: d.color,
+            checklist: d.items || []
+          }));
+          setRoutines(mapped as Routine[]);
+        }
+      } else {
+        const saved = localStorage.getItem(`bentoflow_routines_${effectiveUserId}`);
+        if (saved) {
+          setRoutines(JSON.parse(saved));
+        } else {
+          setRoutines([
+            {
+              id: "1", title: "Morning Routine", startTime: "7:00 AM", endTime: "9:00 AM",
+              days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], icon: "sun", color: "#facc15",
+              checklist: [{ id: "1", text: "Wake up", completed: false }, { id: "2", text: "Shower", completed: false }, { id: "3", text: "Prayer", completed: false }, { id: "4", text: "Breakfast", completed: false }]
+            }
+          ]);
+        }
+      }
+      setIsLoaded(true);
     }
-    setIsLoaded(true);
-  }, [effectiveUserId]);
+    loadRoutines();
+  }, [effectiveUserId, isGuest]);
 
-  // Save to localStorage when routines change
+  // Save to localStorage
   useEffect(() => {
-    if (isLoaded) {
+    if (isLoaded && isGuest) {
       localStorage.setItem(`bentoflow_routines_${effectiveUserId}`, JSON.stringify(routines));
     }
-  }, [routines, effectiveUserId, isLoaded]);
+  }, [routines, effectiveUserId, isLoaded, isGuest]);
 
   const [isAddingRoutine, setIsAddingRoutine] = useState(false);
   const [editingRoutineId, setEditingRoutineId] = useState<string | null>(null);
@@ -94,7 +130,7 @@ export default function RoutineSection({ variant = "compact", userId }: RoutineS
   const [newChecklistInput, setNewChecklistInput] = useState("");
   const [editChecklistInput, setEditChecklistInput] = useState("");
 
-  const handleAddRoutine = () => {
+  const handleAddRoutine = async () => {
     if (!newRoutine.title || !newRoutine.startTime || !newRoutine.endTime) {
       alert("Please fill in all routine details (title, start time, end time).");
       return;
@@ -104,8 +140,9 @@ export default function RoutineSection({ variant = "compact", userId }: RoutineS
       return;
     }
 
+    const tempId = Date.now().toString();
     const routine: Routine = {
-      id: Date.now().toString(),
+      id: tempId,
       title: newRoutine.title,
       startTime: newRoutine.startTime,
       endTime: newRoutine.endTime,
@@ -119,20 +156,41 @@ export default function RoutineSection({ variant = "compact", userId }: RoutineS
     setNewRoutine({ days: [], checklist: [], icon: "sun", color: COLORS[0] });
     setNewChecklistInput("");
     setIsAddingRoutine(false);
+
+    if (!isGuest) {
+      const { data } = await supabase.from('routines').insert([{
+        user_id: userId,
+        title: routine.title,
+        start_time: routine.startTime,
+        end_time: routine.endTime,
+        days_of_week: routine.days,
+        icon: routine.icon,
+        color: routine.color,
+        items: routine.checklist
+      }]).select();
+
+      if (data && data[0]) {
+        setRoutines(prev => prev.map(r => r.id === tempId ? { ...r, id: data[0].id } : r));
+      }
+    }
   };
 
-  const toggleChecklistItem = (routineId: string, itemId: string) => {
+  const toggleChecklistItem = async (routineId: string, itemId: string) => {
+    let updatedChecklist: ChecklistItem[] = [];
+
     setRoutines(routines.map(r => {
       if (r.id === routineId) {
-        return {
-          ...r,
-          checklist: r.checklist.map(item =>
-            item.id === itemId ? { ...item, completed: !item.completed } : item
-          )
-        };
+        updatedChecklist = r.checklist.map(item =>
+          item.id === itemId ? { ...item, completed: !item.completed } : item
+        );
+        return { ...r, checklist: updatedChecklist };
       }
       return r;
     }));
+
+    if (!isGuest) {
+      await supabase.from('routines').update({ items: updatedChecklist }).eq('id', routineId);
+    }
   };
 
   const getIcon = (name: string) => {
@@ -353,19 +411,37 @@ export default function RoutineSection({ variant = "compact", userId }: RoutineS
     setEditChecklistInput(""); // Clear input when starting edit
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editedRoutine.title || !editingRoutineId) return;
 
     setRoutines(routines.map((r: Routine) =>
       r.id === editingRoutineId ? { ...r, ...editedRoutine } as Routine : r
     ));
+
+    if (!isGuest) {
+      await supabase.from('routines').update({
+        title: editedRoutine.title,
+        start_time: editedRoutine.startTime,
+        end_time: editedRoutine.endTime,
+        days_of_week: editedRoutine.days,
+        icon: editedRoutine.icon,
+        color: editedRoutine.color,
+        items: editedRoutine.checklist
+      }).eq('id', editingRoutineId);
+    }
+
     setIsEditing(false);
     setEditingRoutineId(null);
   };
 
-  const handleDeleteRoutine = () => {
+  const handleDeleteRoutine = async () => {
     if (!editingRoutineId) return;
     setRoutines(routines.filter((r: Routine) => r.id !== editingRoutineId));
+
+    if (!isGuest) {
+      await supabase.from('routines').delete().eq('id', editingRoutineId);
+    }
+
     setIsEditing(false);
     setEditingRoutineId(null);
   };

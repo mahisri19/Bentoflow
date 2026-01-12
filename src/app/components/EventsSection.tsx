@@ -3,6 +3,7 @@ import { Plus, Calendar, Clock, Trash2, CheckCircle, Circle } from "lucide-react
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { supabase } from "../../lib/supabase";
 
 type Event = {
   id: string;
@@ -33,47 +34,95 @@ export default function EventsSection({ variant = "compact", userId }: EventsSec
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const effectiveUserId = userId || "guest";
+  const isGuest = !userId || userId === "guest";
 
   useEffect(() => {
-    const saved = localStorage.getItem(`bentoflow_events_${effectiveUserId}`);
-    if (saved) {
-      setEvents(JSON.parse(saved));
-    } else {
-      setEvents([
-        {
-          id: "1",
-          title: "Product Launch",
-          date: "2025-12-25",
-          startTime: "10:00",
-          color: "#3b82f6",
-          location: "Main Hall"
-        },
-        {
-          id: "2",
-          title: "Team Offsite",
-          date: "2025-12-28",
-          startTime: "09:00",
-          color: "#ec4899",
-          location: "Lake Resort"
-        },
-        {
-          id: "3",
-          title: "Year End Review",
-          date: "2025-12-31",
-          startTime: "14:00",
-          color: "#10b981",
-          location: "Office"
-        },
-      ]);
+    async function loadEvents() {
+      if (!isGuest) {
+        // Migrate
+        const localData = localStorage.getItem(`bentoflow_events_${effectiveUserId}`);
+        if (localData) {
+          try {
+            const localEvents: Event[] = JSON.parse(localData);
+            if (localEvents.length > 0) {
+              const dbEvents = localEvents.map(e => ({
+                user_id: userId,
+                title: e.title,
+                date: e.date,
+                start_time: e.startTime,
+                location: e.location,
+                description: e.description,
+                color: e.color,
+                completed: e.completed || false
+              }));
+              const { error } = await supabase.from('events').insert(dbEvents);
+              if (!error) localStorage.removeItem(`bentoflow_events_${effectiveUserId}`);
+            }
+          } catch (e) {
+            console.error("Migration error", e);
+          }
+        }
+
+        // Fetch
+        const { data, error } = await supabase.from('events').select('*');
+        if (!error && data) {
+          const mapped = data.map((d: any) => ({
+            id: d.id,
+            title: d.title,
+            date: d.date,
+            startTime: d.start_time,
+            location: d.location,
+            description: d.description,
+            color: d.color,
+            completed: d.completed
+          }));
+          // Sort by date
+          mapped.sort((a, b) => a.date.localeCompare(b.date));
+          setEvents(mapped);
+        }
+      } else {
+        const saved = localStorage.getItem(`bentoflow_events_${effectiveUserId}`);
+        if (saved) {
+          setEvents(JSON.parse(saved));
+        } else {
+          setEvents([
+            {
+              id: "1",
+              title: "Product Launch",
+              date: "2025-12-25",
+              startTime: "10:00",
+              color: "#3b82f6",
+              location: "Main Hall"
+            },
+            {
+              id: "2",
+              title: "Team Offsite",
+              date: "2025-12-28",
+              startTime: "09:00",
+              color: "#ec4899",
+              location: "Lake Resort"
+            },
+            {
+              id: "3",
+              title: "Year End Review",
+              date: "2025-12-31",
+              startTime: "14:00",
+              color: "#10b981",
+              location: "Office"
+            },
+          ]);
+        }
+      }
+      setIsLoaded(true);
     }
-    setIsLoaded(true);
-  }, [effectiveUserId]);
+    loadEvents();
+  }, [effectiveUserId, isGuest]);
 
   useEffect(() => {
-    if (isLoaded) {
+    if (isLoaded && isGuest) {
       localStorage.setItem(`bentoflow_events_${effectiveUserId}`, JSON.stringify(events));
     }
-  }, [events, effectiveUserId, isLoaded]);
+  }, [events, effectiveUserId, isLoaded, isGuest]);
 
   const [isAddingEvent, setIsAddingEvent] = useState(false);
   const [newEvent, setNewEvent] = useState<Partial<Event>>({
@@ -81,26 +130,61 @@ export default function EventsSection({ variant = "compact", userId }: EventsSec
     date: new Date().toISOString().split('T')[0]
   });
 
-  const handleAddEvent = () => {
+  const handleAddEvent = async () => {
     if (!newEvent.title || !newEvent.date) return;
 
+    const tempId = Date.now().toString();
     const event: Event = {
-      id: Date.now().toString(),
+      id: tempId,
       title: newEvent.title,
       date: newEvent.date,
       startTime: newEvent.startTime,
       location: newEvent.location,
       description: newEvent.description,
       color: newEvent.color || "#3b82f6",
+      completed: false
     };
 
-    setEvents([...events, event].sort((a, b) => a.date.localeCompare(b.date)));
+    const updatedEvents = [...events, event].sort((a, b) => a.date.localeCompare(b.date));
+    setEvents(updatedEvents);
     setNewEvent({ color: "#3b82f6", date: new Date().toISOString().split('T')[0] });
     setIsAddingEvent(false);
+
+    if (!isGuest) {
+      const { data } = await supabase.from('events').insert([{
+        user_id: userId,
+        title: event.title,
+        date: event.date,
+        start_time: event.startTime,
+        location: event.location,
+        description: event.description,
+        color: event.color,
+        completed: false
+      }]).select();
+
+      if (data && data[0]) {
+        setEvents(prev => prev.map(e => e.id === tempId ? { ...e, id: data[0].id } : e));
+      }
+    }
   };
 
-  const deleteEvent = (id: string) => {
+  const deleteEvent = async (id: string) => {
     setEvents(events.filter(e => e.id !== id));
+    if (!isGuest) {
+      await supabase.from('events').delete().eq('id', id);
+    }
+  };
+
+  const toggleEventCompletion = async (id: string) => {
+    const event = events.find(e => e.id === id);
+    if (!event) return;
+    const newCompleted = !event.completed;
+
+    setEvents(events.map(e => e.id === id ? { ...e, completed: newCompleted } : e));
+
+    if (!isGuest) {
+      await supabase.from('events').update({ completed: newCompleted }).eq('id', id);
+    }
   };
 
   // Helper to format date
@@ -221,11 +305,7 @@ export default function EventsSection({ variant = "compact", userId }: EventsSec
     const todayStr = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split('T')[0];
     const displayedEvents = events.filter(event => event.date === todayStr);
 
-    const toggleEventCompletion = (id: string) => {
-      setEvents(events.map(event =>
-        event.id === id ? { ...event, completed: !event.completed } : event
-      ));
-    };
+
 
     return (
       <div className="backdrop-blur-[12.5px] backdrop-filter bg-white/15 border border-white/30 rounded-[15px] shadow-[0px_10px_35px_0px_rgba(0,0,0,0.15)] p-6 h-full flex flex-col relative overflow-hidden">

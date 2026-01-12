@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import confetti from "canvas-confetti";
+import { supabase } from "../../lib/supabase";
 
 type Task = {
   id: string;
@@ -40,77 +41,92 @@ export default function TasksSection({ variant = "compact", userId }: TasksSecti
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const effectiveUserId = userId || "guest";
+  const isGuest = !userId || userId === "guest";
 
-  // Load from localStorage
+  // Load Data
   useEffect(() => {
-    const saved = localStorage.getItem(`bentoflow_tasks_${effectiveUserId}`);
-    if (saved) {
-      setTasks(JSON.parse(saved));
-    } else {
-      // Default tasks only if nothing saved
-      setTasks([
-        {
-          id: "1",
-          title: "Review Morning Emails",
-          category: "Work",
-          dueTime: "9:00 AM",
-          dueDate: todayStr,
-          priority: "high",
-          completed: false,
-        },
-        {
-          id: "2",
-          title: "Team Meeting",
-          category: "Work",
-          dueTime: "11:00 AM",
-          dueDate: tomorrowStr,
-          priority: "high",
-          completed: false,
-        },
-        {
-          id: "3",
-          title: "Workout",
-          category: "Personal",
-          dueTime: "6:00 PM",
-          dueDate: todayStr,
-          priority: "med",
-          completed: false,
-        },
-        {
-          id: "4",
-          title: "Project Deadline",
-          category: "Work",
-          dueTime: "5:00 PM",
-          dueDate: yesterdayStr,
-          priority: "high",
-          completed: false,
-        },
-        {
-          id: "5",
-          title: "Buy Groceries",
-          category: "Personal",
-          dueTime: "7:00 PM",
-          dueDate: yesterdayStr,
-          priority: "low",
-          completed: true,
+    async function loadTasks() {
+      if (!isGuest) {
+        // Check for local data to migrate
+        const localData = localStorage.getItem(`bentoflow_tasks_${effectiveUserId}`);
+        let finalTasks: Task[] = [];
+
+        if (localData) {
+          try {
+            const localTasks: Task[] = JSON.parse(localData);
+            if (localTasks.length > 0) {
+              // Transform for DB
+              const dbTasks = localTasks.map(t => ({
+                user_id: userId,
+                title: t.title,
+                description: t.description || null,
+                due_date: t.dueDate || null,
+                due_time: t.dueTime || null,
+                priority: t.priority,
+                completed: t.completed,
+                category: t.category,
+                // created_at: now... (let db handle default)
+              }));
+
+              const { error } = await supabase.from('tasks').insert(dbTasks);
+              if (!error) {
+                // Clear local so we don't migrate again
+                localStorage.removeItem(`bentoflow_tasks_${effectiveUserId}`);
+              }
+            }
+          } catch (e) {
+            console.error("Migration error", e);
+          }
         }
-      ]);
-    }
-    setIsLoaded(true);
-  }, [effectiveUserId, todayStr, tomorrowStr, yesterdayStr]);
 
-  // Save to localStorage
+        // Fetch from DB
+        const { data, error } = await supabase.from('tasks').select('*');
+        if (!error && data) {
+          finalTasks = data.map((d: any) => ({
+            id: d.id,
+            title: d.title,
+            description: d.description || undefined,
+            dueDate: d.due_date || undefined,
+            dueTime: d.due_time || undefined,
+            priority: d.priority as any,
+            completed: d.completed,
+            category: d.category
+          }));
+        }
+        setTasks(finalTasks);
+      } else {
+        // Guest Mode - Load Local or Default
+        const saved = localStorage.getItem(`bentoflow_tasks_${effectiveUserId}`);
+        if (saved) {
+          setTasks(JSON.parse(saved));
+        } else {
+          setTasks([
+            { id: "1", title: "Review Morning Emails", category: "Work", dueTime: "9:00 AM", dueDate: todayStr, priority: "high", completed: false },
+            { id: "2", title: "Team Meeting", category: "Work", dueTime: "11:00 AM", dueDate: tomorrowStr, priority: "high", completed: false },
+            { id: "3", title: "Workout", category: "Personal", dueTime: "6:00 PM", dueDate: todayStr, priority: "med", completed: false },
+            { id: "4", title: "Project Deadline", category: "Work", dueTime: "5:00 PM", dueDate: yesterdayStr, priority: "high", completed: false },
+            { id: "5", title: "Buy Groceries", category: "Personal", dueTime: "7:00 PM", dueDate: yesterdayStr, priority: "low", completed: true }
+          ]);
+        }
+      }
+      setIsLoaded(true);
+    }
+
+    loadTasks();
+  }, [effectiveUserId, isGuest, todayStr, tomorrowStr, yesterdayStr]);
+
+  // Save to localStorage (Guest Only)
   useEffect(() => {
-    if (isLoaded) {
+    if (isLoaded && isGuest) {
       localStorage.setItem(`bentoflow_tasks_${effectiveUserId}`, JSON.stringify(tasks));
     }
-  }, [tasks, effectiveUserId, isLoaded]);
+  }, [tasks, effectiveUserId, isLoaded, isGuest]);
 
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [newTask, setNewTask] = useState<Partial<Task>>({
     priority: "med",
     completed: false,
-    dueDate: todayStr // Default to today
+    dueDate: todayStr
   });
   const [filter, setFilter] = useState<"all" | "today" | "upcoming" | "overdue" | "completed">("today");
 
@@ -141,11 +157,13 @@ export default function TasksSection({ variant = "compact", userId }: TasksSecti
     }
   }, [progress, totalTodaysTasks]);
 
-  const handleAddTask = () => {
+  const handleAddTask = async () => {
     if (!newTask.title) return;
 
+    // Optimistic Update
+    const tempId = Date.now().toString();
     const task: Task = {
-      id: Date.now().toString(),
+      id: tempId,
       title: newTask.title,
       description: newTask.description,
       dueDate: newTask.dueDate || todayStr,
@@ -155,19 +173,56 @@ export default function TasksSection({ variant = "compact", userId }: TasksSecti
       category: newTask.category || "General",
     };
 
-    setTasks([...tasks, task]);
+    const updatedTasks = [...tasks, task];
+    setTasks(updatedTasks);
+
     setNewTask({ priority: "med", completed: false, dueDate: todayStr });
     setIsAddingTask(false);
+
+    // DB Insert
+    if (!isGuest) {
+      const { data, error } = await supabase.from('tasks').insert([{
+        user_id: userId,
+        title: task.title,
+        description: task.description,
+        due_date: task.dueDate,
+        due_time: task.dueTime,
+        priority: task.priority,
+        completed: task.completed,
+        category: task.category
+      }]).select();
+
+      if (data && data[0]) {
+        // Update temporary ID with real UUID
+        setTasks(prev => prev.map(t => t.id === tempId ? { ...t, id: data[0].id } : t));
+      } else if (error) {
+        // Revert on error? Or just log.
+        console.error("Task insert failed", error);
+      }
+    }
   };
 
-  const toggleTask = (id: string) => {
+  const toggleTask = async (id: string) => {
+    const taskToUpdate = tasks.find(t => t.id === id);
+    if (!taskToUpdate) return;
+
+    const newCompleted = !taskToUpdate.completed;
+
     setTasks(tasks.map(task =>
-      task.id === id ? { ...task, completed: !task.completed } : task
+      task.id === id ? { ...task, completed: newCompleted } : task
     ));
+
+    if (!isGuest) {
+      await supabase.from('tasks').update({ completed: newCompleted }).eq('id', id);
+    }
   };
 
-  const deleteTask = (id: string) => {
+  const deleteTask = async (id: string) => {
     setTasks(tasks.filter(task => task.id !== id));
+
+    if (!isGuest) {
+      await supabase.from('tasks').delete().eq('id', id);
+    }
   };
 
   if (variant === "compact") {
