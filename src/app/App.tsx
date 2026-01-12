@@ -129,6 +129,7 @@ export default function App() {
           onClose={() => setSidebarOpen(false)}
           currentView={currentView}
           onViewChange={setCurrentView}
+          onSignOut={() => setSession(null)}
         />
       </div>
     );
@@ -169,6 +170,7 @@ export default function App() {
           onClose={() => setSidebarOpen(false)}
           currentView={currentView}
           onViewChange={setCurrentView}
+          onSignOut={() => setSession(null)}
         />
       </div>
     );
@@ -209,6 +211,7 @@ export default function App() {
           onClose={() => setSidebarOpen(false)}
           currentView={currentView}
           onViewChange={setCurrentView}
+          onSignOut={() => setSession(null)}
         />
       </div>
     );
@@ -249,6 +252,7 @@ export default function App() {
           onClose={() => setSidebarOpen(false)}
           currentView={currentView}
           onViewChange={setCurrentView}
+          onSignOut={() => setSession(null)}
         />
       </div>
     );
@@ -289,6 +293,7 @@ export default function App() {
           onClose={() => setSidebarOpen(false)}
           currentView={currentView}
           onViewChange={setCurrentView}
+          onSignOut={() => setSession(null)}
         />
       </div>
     );
@@ -393,6 +398,7 @@ export default function App() {
         onClose={() => setSidebarOpen(false)}
         currentView={currentView}
         onViewChange={setCurrentView}
+        onSignOut={() => setSession(null)}
       />
     </div>
   );

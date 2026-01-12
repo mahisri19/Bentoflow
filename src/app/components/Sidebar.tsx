@@ -6,9 +6,10 @@ type SidebarProps = {
   onClose: () => void;
   currentView: string;
   onViewChange: (view: string) => void;
+  onSignOut?: () => void;
 };
 
-export default function Sidebar({ isOpen, onClose, currentView, onViewChange }: SidebarProps) {
+export default function Sidebar({ isOpen, onClose, currentView, onViewChange, onSignOut }: SidebarProps) {
   const menuItems = [
     { id: "home", label: "Home", icon: null },
     { id: "tasks", label: "Tasks", icon: CheckSquare },
@@ -19,8 +20,15 @@ export default function Sidebar({ isOpen, onClose, currentView, onViewChange }: 
   ];
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    onClose();
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      onSignOut?.();
+      onClose();
+    } catch (error) {
+      console.error("Error signing out:", error);
+      onClose();
+    }
   };
 
   if (!isOpen) return null;
@@ -51,8 +59,8 @@ export default function Sidebar({ isOpen, onClose, currentView, onViewChange }: 
                   onClose();
                 }}
                 className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center gap-3 ${currentView === item.id
-                    ? "bg-white/20 text-white"
-                    : "text-white/80 hover:bg-white/10"
+                  ? "bg-white/20 text-white"
+                  : "text-white/80 hover:bg-white/10"
                   }`}
               >
                 {item.icon && <item.icon className="w-5 h-5" />}
