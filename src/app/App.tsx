@@ -315,7 +315,7 @@ export default function App() {
       <div className="fixed md:absolute bg-black/15 inset-0" />
 
       {/* Header */}
-      <div className="absolute left-5 top-5 md:left-14 md:top-12 z-10">
+      <div className="absolute left-5 top-5 md:left-14 md:top-12 z-20">
         <button
           onClick={() => setSidebarOpen(true)}
           className="text-white hover:text-white/70 transition-colors"
@@ -344,8 +344,8 @@ export default function App() {
       </div>
 
       {/* Main grid */}
-      <div className="relative inset-auto top-24 bottom-auto px-4 pb-24 md:absolute md:inset-0 md:top-28 md:bottom-24 md:px-14 z-10 h-auto md:h-full">
-        <div className="grid grid-cols-1 md:grid-cols-12 md:grid-rows-6 gap-4 md:gap-6 h-auto md:h-full">
+      <div className="relative inset-auto top-24 bottom-auto px-4 pb-24 md:absolute md:inset-0 md:top-32 md:bottom-20 md:px-14 z-10 h-auto">
+        <div className="grid grid-cols-1 md:grid-cols-12 md:grid-rows-6 gap-4 md:gap-5 h-auto md:h-full">
           {/* Today's Tasks - spans 4 columns, 4 rows */}
           <div className="col-span-1 md:col-span-4 md:row-span-4 h-[400px] md:h-auto">
             <TasksSection variant="compact" userId={session?.user?.id} />
