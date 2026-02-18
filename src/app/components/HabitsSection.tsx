@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Plus, Droplet, Sparkles, Footprints, Coffee, Book, Dumbbell, Music, Heart, Check, Trash2, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
@@ -49,38 +49,19 @@ export default function HabitsSection({ variant = "compact", userId }: HabitsSec
   const effectiveUserId = userId || "guest";
   const isGuest = !userId || userId === "guest";
 
+  const storageMigrationAttempted = useRef(false);
+
   useEffect(() => {
     async function loadHabits() {
       const todayStr = new Date().toISOString().split('T')[0];
 
       if (!isGuest) {
-        // Check/Migrate Local
-        const localData = localStorage.getItem(`bentoflow_habits_${effectiveUserId}`);
-        if (localData) {
-          try {
-            const localHabits: Habit[] = JSON.parse(localData);
-            if (localHabits.length > 0) {
-              const dbHabits = localHabits.map(h => ({
-                user_id: userId,
-                name: h.name,
-                icon: h.icon,
-                color: h.color,
-                streak: h.streak,
-                days_of_week: h.daysOfWeek,
-                completed_dates: h.completedToday ? [todayStr] : []
-              }));
-              const { error } = await supabase.from('habits').insert(dbHabits);
-              if (!error) localStorage.removeItem(`bentoflow_habits_${effectiveUserId}`);
-            }
-          } catch (e) {
-            console.error("Migration failed", e);
-          }
-        }
+        let dbHabitsList: Habit[] = [];
 
-        // Fetch
+        // 1. Fetch existing DB habits first
         const { data, error } = await supabase.from('habits').select('*');
         if (!error && data) {
-          const mapped: Habit[] = data.map((d: any) => ({
+          dbHabitsList = data.map((d: any) => ({
             id: d.id,
             name: d.name,
             icon: d.icon,
@@ -89,9 +70,58 @@ export default function HabitsSection({ variant = "compact", userId }: HabitsSec
             daysOfWeek: d.days_of_week,
             completedToday: d.completed_dates?.includes(todayStr) || false
           }));
-          setHabits(mapped);
         }
+
+        // 2. Check/Migrate Local Data (Only if DB is empty to avoid duplication)
+        if (!storageMigrationAttempted.current && dbHabitsList.length === 0) {
+          storageMigrationAttempted.current = true;
+          const localData = localStorage.getItem(`bentoflow_habits_${effectiveUserId}`);
+
+          if (localData) {
+            try {
+              const localHabits: Habit[] = JSON.parse(localData);
+              if (localHabits.length > 0) {
+                const habitsToInsert = localHabits.map(h => ({
+                  user_id: userId,
+                  name: h.name,
+                  icon: h.icon,
+                  color: h.color,
+                  streak: h.streak,
+                  days_of_week: h.daysOfWeek,
+                  completed_dates: h.completedToday ? [todayStr] : []
+                }));
+
+                const { data: insertedData, error: insertError } = await supabase
+                  .from('habits')
+                  .insert(habitsToInsert)
+                  .select();
+
+                if (!insertError && insertedData) {
+                  // Clean up local storage
+                  localStorage.removeItem(`bentoflow_habits_${effectiveUserId}`);
+
+                  // Add inserted habits to our list
+                  const mappedInserted = insertedData.map((d: any) => ({
+                    id: d.id,
+                    name: d.name,
+                    icon: d.icon,
+                    color: d.color,
+                    streak: d.streak,
+                    daysOfWeek: d.days_of_week,
+                    completedToday: d.completed_dates?.includes(todayStr) || false
+                  }));
+                  dbHabitsList = [...dbHabitsList, ...mappedInserted];
+                }
+              }
+            } catch (e) {
+              console.error("Migration failed", e);
+            }
+          }
+        }
+
+        setHabits(dbHabitsList);
       } else {
+        // Guest Mode
         const saved = localStorage.getItem(`bentoflow_habits_${effectiveUserId}`);
         if (saved) {
           setHabits(JSON.parse(saved));
