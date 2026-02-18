@@ -130,6 +130,14 @@ export default function TasksSection({ variant = "compact", userId }: TasksSecti
   });
   const [filter, setFilter] = useState<"all" | "today" | "upcoming" | "overdue" | "completed">("today");
 
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isEditingTask, setIsEditingTask] = useState(false);
+
+  const openEditTask = (task: Task) => {
+    setSelectedTask(task);
+    setIsEditingTask(true);
+  };
+
   // Calculate Daily Progress (Fixed to Today's Tasks)
   const todaysTasks = tasks.filter(t => t.dueDate === todayStr);
   const totalTodaysTasks = todaysTasks.length;
@@ -202,6 +210,32 @@ export default function TasksSection({ variant = "compact", userId }: TasksSecti
     }
   };
 
+  const handleUpdateTask = async () => {
+    if (!selectedTask || !selectedTask.title) return;
+
+    // Optimistic Update
+    setTasks(tasks.map(t => t.id === selectedTask.id ? selectedTask : t));
+    setIsEditingTask(false);
+    setSelectedTask(null);
+
+    // DB Update
+    if (!isGuest) {
+      const { error } = await supabase.from('tasks').update({
+        title: selectedTask.title,
+        description: selectedTask.description,
+        due_date: selectedTask.dueDate,
+        due_time: selectedTask.dueTime,
+        priority: selectedTask.priority,
+        completed: selectedTask.completed,
+        category: selectedTask.category
+      }).eq('id', selectedTask.id);
+
+      if (error) {
+        console.error("Task update failed", error);
+      }
+    }
+  };
+
   const toggleTask = async (id: string) => {
     const taskToUpdate = tasks.find(t => t.id === id);
     if (!taskToUpdate) return;
@@ -247,10 +281,11 @@ export default function TasksSection({ variant = "compact", userId }: TasksSecti
             compactTasks.map((task) => (
               <div
                 key={task.id}
-                className={`relative overflow-hidden backdrop-blur-sm rounded-xl p-4 border transition-all duration-300 hover:shadow-lg bg-gradient-to-br ${task.priority === 'high' ? 'from-red-500/10 to-rose-500/5 border-red-500/20 shadow-red-900/10' :
+                className={`relative overflow-hidden backdrop-blur-sm rounded-xl p-4 border transition-all duration-300 hover:shadow-lg cursor-pointer bg-gradient-to-br ${task.priority === 'high' ? 'from-red-500/10 to-rose-500/5 border-red-500/20 shadow-red-900/10' :
                   task.priority === 'med' ? 'from-amber-500/10 to-orange-500/5 border-amber-500/20 shadow-amber-900/10' :
                     'from-emerald-500/10 to-teal-500/5 border-emerald-500/20 shadow-emerald-900/10'
                   }`}
+                onClick={() => openEditTask(task)}
               >
                 {/* Grid Pattern Overlay */}
                 <div
@@ -262,7 +297,10 @@ export default function TasksSection({ variant = "compact", userId }: TasksSecti
                 />
                 <div className="flex items-start gap-3">
                   <button
-                    onClick={() => toggleTask(task.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleTask(task.id);
+                    }}
                     className="mt-0.5"
                   >
                     {task.completed ? (
@@ -398,10 +436,14 @@ export default function TasksSection({ variant = "compact", userId }: TasksSecti
             filteredTasks.map((task) => (
               <div
                 key={task.id}
-                className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 transition-all hover:bg-white/15"
+                className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 transition-all hover:bg-white/15 cursor-pointer"
+                onClick={() => openEditTask(task)}
               >
                 <div className="flex items-start gap-3">
-                  <button onClick={() => toggleTask(task.id)} className="mt-0.5">
+                  <button onClick={(e) => {
+                    e.stopPropagation();
+                    toggleTask(task.id);
+                  }} className="mt-0.5">
                     {task.completed ? (
                       <CheckCircle className="w-5 h-5 text-green-400" />
                     ) : (
@@ -445,7 +487,10 @@ export default function TasksSection({ variant = "compact", userId }: TasksSecti
                       {task.priority}
                     </span>
                     <button
-                      onClick={() => deleteTask(task.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteTask(task.id);
+                      }}
                       className="text-white/40 hover:text-red-400 transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -587,6 +632,105 @@ export default function TasksSection({ variant = "compact", userId }: TasksSecti
               Create Task
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Task Dialog */}
+      <Dialog open={isEditingTask} onOpenChange={setIsEditingTask}>
+        <DialogContent className="bg-black/60 backdrop-blur-3xl border-white/10 text-white rounded-[32px] shadow-2xl p-6 sm:p-8 w-[90%] max-w-md mx-auto">
+          <DialogHeader>
+            <DialogTitle className="font-['Be_Vietnam_Pro',sans-serif] text-2xl font-semibold text-center mb-2">Edit Task</DialogTitle>
+          </DialogHeader>
+          {selectedTask && (
+            <div className="space-y-5">
+              <Input
+                placeholder="Task Name"
+                value={selectedTask.title || ""}
+                onChange={(e) => setSelectedTask({ ...selectedTask, title: e.target.value })}
+                className="bg-white/5 border-white/10 text-white placeholder:text-white/40 rounded-2xl h-12 px-4 focus:bg-white/10 focus:border-white/20 transition-all w-full max-w-full min-w-0"
+              />
+              <Textarea
+                placeholder="Description"
+                value={selectedTask.description || ""}
+                onChange={(e) => setSelectedTask({ ...selectedTask, description: e.target.value })}
+                className="bg-white/5 border-white/10 text-white placeholder:text-white/40 rounded-2xl min-h-[100px] p-4 focus:bg-white/10 focus:border-white/20 transition-all resize-none w-full max-w-full min-w-0"
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Input
+                    type="date"
+                    value={selectedTask.dueDate || ""}
+                    onChange={(e) => setSelectedTask({ ...selectedTask, dueDate: e.target.value })}
+                    className="bg-white/5 border-white/10 text-white rounded-2xl h-12 px-2 sm:px-4 focus:bg-white/10 focus:border-white/20 transition-all w-full text-sm"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Input
+                    type="time"
+                    value={selectedTask.dueTime || ""}
+                    onChange={(e) => setSelectedTask({ ...selectedTask, dueTime: e.target.value })}
+                    className="bg-white/5 border-white/10 text-white rounded-2xl h-12 px-2 sm:px-4 focus:bg-white/10 focus:border-white/20 transition-all w-full text-sm"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-white/60 mb-3 block">Category</label>
+                <div className="flex gap-2 p-1 bg-white/5 rounded-2xl border border-white/5 overflow-x-auto scrolbar-hide w-full">
+                  {(["Work", "Personal", "Health", "General"] as const).map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setSelectedTask({ ...selectedTask, category: cat })}
+                      className={`flex-1 min-w-[70px] py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-300 whitespace-nowrap ${selectedTask.category === cat
+                        ? "bg-white text-black shadow-lg"
+                        : "text-white/40 hover:text-white hover:bg-white/5"
+                        }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-white/60 mb-3 block">Priority</label>
+                <div className="flex gap-2 p-1 bg-white/5 rounded-2xl border border-white/5">
+                  {(["low", "med", "high"] as const).map((priority) => (
+                    <button
+                      key={priority}
+                      onClick={() => setSelectedTask({ ...selectedTask, priority })}
+                      className={`flex-1 py-2.5 rounded-xl capitalize text-sm font-medium transition-all duration-300 ${selectedTask.priority === priority
+                        ? priority === "high" ? "bg-red-500/80 text-white shadow-lg shadow-red-500/20" :
+                          priority === "med" ? "bg-yellow-500/80 text-white shadow-lg shadow-yellow-500/20" :
+                            "bg-green-500/80 text-white shadow-lg shadow-green-500/20"
+                        : "text-white/40 hover:text-white hover:bg-white/5"
+                        }`}
+                    >
+                      {priority}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => {
+                    const confirmDelete = window.confirm("Are you sure you want to delete this task?");
+                    if (confirmDelete) {
+                      deleteTask(selectedTask.id);
+                      setIsEditingTask(false);
+                    }
+                  }}
+                  className="w-1/3 h-14 bg-red-500/10 text-red-400 text-lg font-semibold rounded-2xl hover:bg-red-500/20 transition-all border border-red-500/20"
+                >
+                  Delete
+                </Button>
+                <Button
+                  onClick={handleUpdateTask}
+                  className="flex-1 h-14 bg-white text-black text-lg font-semibold rounded-2xl hover:bg-white/90 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] active:scale-[0.98]"
+                >
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
